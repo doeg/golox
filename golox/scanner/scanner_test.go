@@ -152,6 +152,179 @@ func TestScanTokens(t *testing.T) {
 				{Line: 5, Type: token.EOF},
 			},
 		},
+		{
+			input: `
+				if (condition) {
+					print "yes";
+				} else {
+					print "no";
+				}
+			`,
+			expected: []token.Token{
+				{Line: 1, Lexeme: "if", Type: token.IF},
+				{Line: 1, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 1, Lexeme: "condition", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 1, Lexeme: "{", Type: token.LEFT_BRACE},
+
+				{Line: 2, Lexeme: "print", Type: token.PRINT},
+				{Line: 2, Lexeme: "\"yes\"", Literal: "yes", Type: token.STRING},
+				{Line: 2, Lexeme: ";", Type: token.SEMICOLON},
+
+				{Line: 3, Lexeme: "}", Type: token.RIGHT_BRACE},
+				{Line: 3, Lexeme: "else", Type: token.ELSE},
+				{Line: 3, Lexeme: "{", Type: token.LEFT_BRACE},
+
+				{Line: 4, Lexeme: "print", Type: token.PRINT},
+				{Line: 4, Lexeme: "\"no\"", Literal: "no", Type: token.STRING},
+				{Line: 4, Lexeme: ";", Type: token.SEMICOLON},
+
+				{Line: 5, Lexeme: "}", Type: token.RIGHT_BRACE},
+
+				{Line: 6, Type: token.EOF},
+			},
+		},
+		{
+			input: `
+				for (var a = 1; a < 10; a = a + 1) {
+					print a;
+				}
+			`,
+			expected: []token.Token{
+				{Line: 1, Lexeme: "for", Type: token.FOR},
+				{Line: 1, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 1, Lexeme: "var", Type: token.VAR},
+				{Line: 1, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: "=", Type: token.EQUAL},
+				{Line: 1, Lexeme: "1", Literal: float64(1), Type: token.NUMBER},
+				{Line: 1, Lexeme: ";", Type: token.SEMICOLON},
+				{Line: 1, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: "<", Type: token.LESS},
+				{Line: 1, Lexeme: "10", Literal: float64(10), Type: token.NUMBER},
+				{Line: 1, Lexeme: ";", Type: token.SEMICOLON},
+				{Line: 1, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: "=", Type: token.EQUAL},
+				{Line: 1, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: "+", Type: token.PLUS},
+				{Line: 1, Lexeme: "1", Literal: float64(1), Type: token.NUMBER},
+				{Line: 1, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 1, Lexeme: "{", Type: token.LEFT_BRACE},
+
+				{Line: 2, Lexeme: "print", Type: token.PRINT},
+				{Line: 2, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 2, Lexeme: ";", Type: token.SEMICOLON},
+
+				{Line: 3, Lexeme: "}", Type: token.RIGHT_BRACE},
+
+				{Line: 4, Type: token.EOF},
+			},
+		},
+		{
+			input: "makeBreakfast(bagel, creamCheese, lox);",
+			expected: []token.Token{
+				{Line: 0, Lexeme: "makeBreakfast", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 0, Lexeme: "bagel", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: ",", Type: token.COMMA},
+				{Line: 0, Lexeme: "creamCheese", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: ",", Type: token.COMMA},
+				{Line: 0, Lexeme: "lox", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 0, Lexeme: ";", Type: token.SEMICOLON},
+				{Line: 0, Type: token.EOF},
+			},
+		},
+		{
+			input: `
+				fun outerFunction() {
+					fun innerFunction(str) {
+						print str;
+					}
+
+					innerFunction("hello");
+				}
+			`,
+			expected: []token.Token{
+				{Line: 1, Lexeme: "fun", Type: token.FUN},
+				{Line: 1, Lexeme: "outerFunction", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 1, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 1, Lexeme: "{", Type: token.LEFT_BRACE},
+
+				{Line: 2, Lexeme: "fun", Type: token.FUN},
+				{Line: 2, Lexeme: "innerFunction", Type: token.IDENTIFIER},
+				{Line: 2, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 2, Lexeme: "str", Type: token.IDENTIFIER},
+				{Line: 2, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 2, Lexeme: "{", Type: token.LEFT_BRACE},
+
+				{Line: 3, Lexeme: "print", Type: token.PRINT},
+				{Line: 3, Lexeme: "str", Type: token.IDENTIFIER},
+				{Line: 3, Lexeme: ";", Type: token.SEMICOLON},
+
+				{Line: 4, Lexeme: "}", Type: token.RIGHT_BRACE},
+
+				{Line: 6, Lexeme: "innerFunction", Type: token.IDENTIFIER},
+				{Line: 6, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 6, Lexeme: "\"hello\"", Literal: "hello", Type: token.STRING},
+				{Line: 6, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 6, Lexeme: ";", Type: token.SEMICOLON},
+
+				{Line: 7, Lexeme: "}", Type: token.RIGHT_BRACE},
+
+				{Line: 8, Type: token.EOF},
+			},
+		},
+		{
+			input: `
+				class Brunch < Breakfast {
+					init(meat, bread, drink) {
+						super.init(meat, bread);
+						this.drink = drink;
+					}
+				}
+			`,
+			expected: []token.Token{
+				{Line: 1, Lexeme: "class", Type: token.CLASS},
+				{Line: 1, Lexeme: "Brunch", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: "<", Type: token.LESS},
+				{Line: 1, Lexeme: "Breakfast", Type: token.IDENTIFIER},
+				{Line: 1, Lexeme: "{", Type: token.LEFT_BRACE},
+
+				{Line: 2, Lexeme: "init", Type: token.IDENTIFIER},
+				{Line: 2, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 2, Lexeme: "meat", Type: token.IDENTIFIER},
+				{Line: 2, Lexeme: ",", Type: token.COMMA},
+				{Line: 2, Lexeme: "bread", Type: token.IDENTIFIER},
+				{Line: 2, Lexeme: ",", Type: token.COMMA},
+				{Line: 2, Lexeme: "drink", Type: token.IDENTIFIER},
+				{Line: 2, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 2, Lexeme: "{", Type: token.LEFT_BRACE},
+
+				{Line: 3, Lexeme: "super", Type: token.SUPER},
+				{Line: 3, Lexeme: ".", Type: token.DOT},
+				{Line: 3, Lexeme: "init", Type: token.IDENTIFIER},
+				{Line: 3, Lexeme: "(", Type: token.LEFT_PAREN},
+				{Line: 3, Lexeme: "meat", Type: token.IDENTIFIER},
+				{Line: 3, Lexeme: ",", Type: token.COMMA},
+				{Line: 3, Lexeme: "bread", Type: token.IDENTIFIER},
+				{Line: 3, Lexeme: ")", Type: token.RIGHT_PAREN},
+				{Line: 3, Lexeme: ";", Type: token.SEMICOLON},
+
+				{Line: 4, Lexeme: "this", Type: token.THIS},
+				{Line: 4, Lexeme: ".", Type: token.DOT},
+				{Line: 4, Lexeme: "drink", Type: token.IDENTIFIER},
+				{Line: 4, Lexeme: "=", Type: token.EQUAL},
+				{Line: 4, Lexeme: "drink", Type: token.IDENTIFIER},
+				{Line: 4, Lexeme: ";", Type: token.SEMICOLON},
+
+				{Line: 5, Lexeme: "}", Type: token.RIGHT_BRACE},
+
+				{Line: 6, Lexeme: "}", Type: token.RIGHT_BRACE},
+
+				{Line: 7, Type: token.EOF},
+			},
+		},
 	}
 
 	for _, tt := range tests {
