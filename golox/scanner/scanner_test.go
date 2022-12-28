@@ -54,11 +54,72 @@ func TestScanTokens(t *testing.T) {
 			},
 		},
 		{
+			input: "1*2 >= 3*4",
+			expected: []token.Token{
+				{Line: 0, Lexeme: "1", Literal: float64(1), Type: token.NUMBER},
+				{Line: 0, Lexeme: "*", Type: token.STAR},
+				{Line: 0, Lexeme: "2", Literal: float64(2), Type: token.NUMBER},
+				{Line: 0, Lexeme: ">=", Type: token.GREATER_EQUAL},
+				{Line: 0, Lexeme: "3", Literal: float64(3), Type: token.NUMBER},
+				{Line: 0, Lexeme: "*", Type: token.STAR},
+				{Line: 0, Lexeme: "4", Literal: float64(4), Type: token.NUMBER},
+
+				{Line: 0, Type: token.EOF},
+			},
+		},
+		{
+			input: "-12/0.34",
+			expected: []token.Token{
+				{Line: 0, Lexeme: "-", Type: token.MINUS},
+				{Line: 0, Lexeme: "12", Literal: float64(12), Type: token.NUMBER},
+				{Line: 0, Lexeme: "/", Type: token.SLASH},
+				{Line: 0, Lexeme: "0.34", Literal: 0.34, Type: token.NUMBER},
+				{Line: 0, Type: token.EOF},
+			},
+		},
+		{
 			input: "1 != 2",
 			expected: []token.Token{
 				{Line: 0, Lexeme: "1", Literal: float64(1), Type: token.NUMBER},
 				{Line: 0, Lexeme: "!=", Type: token.BANG_EQUAL},
 				{Line: 0, Lexeme: "2", Literal: float64(2), Type: token.NUMBER},
+				{Line: 0, Type: token.EOF},
+			},
+		},
+		{
+			input: "a == b",
+			expected: []token.Token{
+				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: "==", Type: token.EQUAL_EQUAL},
+				{Line: 0, Lexeme: "b", Type: token.IDENTIFIER},
+				{Line: 0, Type: token.EOF},
+			},
+		},
+		{
+			input: "a != b",
+			expected: []token.Token{
+				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: "!=", Type: token.BANG_EQUAL},
+				{Line: 0, Lexeme: "b", Type: token.IDENTIFIER},
+				{Line: 0, Type: token.EOF},
+			},
+		},
+		{
+			input: "a = !b",
+			expected: []token.Token{
+				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: "=", Type: token.EQUAL},
+				{Line: 0, Lexeme: "!", Type: token.BANG},
+				{Line: 0, Lexeme: "b", Type: token.IDENTIFIER},
+				{Line: 0, Type: token.EOF},
+			},
+		},
+		{
+			input: "a > b",
+			expected: []token.Token{
+				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
+				{Line: 0, Lexeme: ">", Type: token.GREATER},
+				{Line: 0, Lexeme: "b", Type: token.IDENTIFIER},
 				{Line: 0, Type: token.EOF},
 			},
 		},
