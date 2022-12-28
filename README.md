@@ -3,13 +3,19 @@
 To build the binaries and make them globally available:
 
 ```
-go install ./...
+make install
 golox
 ```
 
 To build a binary into the local `build/` folder:
 
 ```
-go build -o build/ ./cmd/golox
+make build
 ./build/golox
+```
+
+To run the tests:
+
+```
+make test
 ```
