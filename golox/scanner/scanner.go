@@ -42,6 +42,8 @@ func (scanner *Scanner) ScanTokens() ([]token.Token, []loxerror.LoxError) {
 		scanner.scanToken()
 	}
 
+	scanner.tokens = append(scanner.tokens, token.Token{Line: scanner.line, Type: token.EOF})
+
 	return scanner.tokens, scanner.errors
 }
 
