@@ -40,13 +40,6 @@ func TestScanTokens(t *testing.T) {
 			},
 		},
 		{
-			testName: "error: unterminated string",
-			input:    "\"",
-			expectedErrors: []loxerror.LoxError{
-				{Line: 0, Message: loxerror.ErrUnterminatedString},
-			},
-		},
-		{
 			input: "1234",
 			expected: []token.Token{
 				{Line: 0, Lexeme: "1234", Literal: float64(1234), Type: token.NUMBER},
@@ -74,23 +67,6 @@ func TestScanTokens(t *testing.T) {
 			expected: []token.Token{
 				{Line: 1, Lexeme: "!=", Type: token.BANG_EQUAL},
 				{Line: 1, Type: token.EOF},
-			},
-		},
-		{
-			testName: "error: invalid character",
-			input:    "@",
-			expected: nil,
-			expectedErrors: []loxerror.LoxError{
-				{Line: 0, Message: fmt.Sprintf(loxerror.ErrUnexpectedCharacter, '@')},
-			},
-		},
-		{
-			testName: "error: invalid characters (multiline)",
-			input:    "@\n$",
-			expected: nil,
-			expectedErrors: []loxerror.LoxError{
-				{Line: 0, Message: fmt.Sprintf(loxerror.ErrUnexpectedCharacter, '@')},
-				{Line: 1, Message: fmt.Sprintf(loxerror.ErrUnexpectedCharacter, '$')},
 			},
 		},
 		{
@@ -323,6 +299,30 @@ func TestScanTokens(t *testing.T) {
 				{Line: 6, Lexeme: "}", Type: token.RIGHT_BRACE},
 
 				{Line: 7, Type: token.EOF},
+			},
+		},
+		{
+			testName: "error: unterminated string",
+			input:    "\"",
+			expectedErrors: []loxerror.LoxError{
+				{Line: 0, Message: loxerror.ErrUnterminatedString},
+			},
+		},
+		{
+			testName: "error: invalid character",
+			input:    "@",
+			expected: nil,
+			expectedErrors: []loxerror.LoxError{
+				{Line: 0, Message: fmt.Sprintf(loxerror.ErrUnexpectedCharacter, '@')},
+			},
+		},
+		{
+			testName: "error: invalid characters (multiline)",
+			input:    "@\n$",
+			expected: nil,
+			expectedErrors: []loxerror.LoxError{
+				{Line: 0, Message: fmt.Sprintf(loxerror.ErrUnexpectedCharacter, '@')},
+				{Line: 1, Message: fmt.Sprintf(loxerror.ErrUnexpectedCharacter, '$')},
 			},
 		},
 	}
