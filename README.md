@@ -1,5 +1,9 @@
 # golox
 
+golox is a tree-walk interpreter for the [Lox programming language](https://github.com/munificent/craftinginterpreters).
+
+## Local development
+
 To build the binaries and make them globally available:
 
 ```
