@@ -2,6 +2,10 @@
 build:
 	go build -o build/ ./...
 
+.PHONY: generate
+generate:
+	go run ./cmd/golox-ast/main.go
+
 .PHONY: install
 install:
 	go install ./...

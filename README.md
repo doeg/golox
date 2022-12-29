@@ -23,3 +23,9 @@ To run the tests:
 ```
 make test
 ```
+
+To regenerate the generated files (e.g., `ast.go`): 
+
+```
+make generate
+```
