@@ -3,24 +3,25 @@ package ast
 import (
 	"testing"
 
+	"github.com/doeg/golox/golox/ast"
 	"github.com/doeg/golox/golox/token"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestASTPrinter(t *testing.T) {
 	tests := []struct {
-		input    Expr
+		input    ast.Expr
 		expected string
 	}{
 		{
-			input: &Binary{
-				Left: &Unary{
+			input: &ast.Binary{
+				Left: &ast.Unary{
 					Operator: &token.Token{
 						Lexeme: "-",
 						Line:   1,
 						Type:   token.MINUS,
 					},
-					Right: &Literal{
+					Right: &ast.Literal{
 						Value: 123,
 					},
 				},
@@ -29,8 +30,8 @@ func TestASTPrinter(t *testing.T) {
 					Line:   1,
 					Type:   token.STAR,
 				},
-				Right: &Grouping{
-					Expression: &Literal{
+				Right: &ast.Grouping{
+					Expression: &ast.Literal{
 						Value: 45.67,
 					},
 				},
