@@ -1,6 +1,9 @@
 package interpreter
 
-import "github.com/doeg/golox/golox/ast"
+import (
+	"github.com/doeg/golox/golox/ast"
+	"github.com/doeg/golox/golox/token"
+)
 
 type Interpreter struct{}
 
@@ -14,18 +17,31 @@ func (i *Interpreter) evaluate(expr ast.Expr) any {
 	return expr.Accept(i)
 }
 
-func (i *Interpreter) visitBinaryExpr(expr *ast.Binary) any {
+func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) any {
 	return nil
 }
 
-func (i *Interpreter) visitGroupingExpr(expr *ast.Grouping) any {
+func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping) any {
+	return i.evaluate(expr)
+}
+
+func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary) any {
+	right := i.evaluate(expr.Right)
+
+	switch expr.Operator.Type {
+	case token.MINUS:
+		ir, ok := right.(float64)
+		if !ok {
+			// TODO
+			panic("oh no")
+		}
+		return -ir
+	}
+
+	// Unreachable
 	return nil
 }
 
-func (i *Interpreter) visitUnaryExpr(expr *ast.Unary) any {
-	return nil
-}
-
-func (i *Interpreter) visitLiteralExpr(expr *ast.Literal) any {
+func (i *Interpreter) VisitLiteralExpr(expr *ast.Literal) any {
 	return expr.Value
 }

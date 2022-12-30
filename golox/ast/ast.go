@@ -6,10 +6,10 @@ import (
 )
 
 type Visitor interface {
-	visitBinaryExpr(expr *Binary) any
-	visitGroupingExpr(expr *Grouping) any
-	visitLiteralExpr(expr *Literal) any
-	visitUnaryExpr(expr *Unary) any
+	VisitBinaryExpr(expr *Binary) any
+	VisitGroupingExpr(expr *Grouping) any
+	VisitLiteralExpr(expr *Literal) any
+	VisitUnaryExpr(expr *Unary) any
 }
 
 type Expr interface {
@@ -23,7 +23,7 @@ type Binary struct {
 }
 
 func (e *Binary) Accept(v Visitor) any {
-	return v.visitBinaryExpr(e)
+	return v.VisitBinaryExpr(e)
 }
 
 type Grouping struct {
@@ -31,7 +31,7 @@ type Grouping struct {
 }
 
 func (e *Grouping) Accept(v Visitor) any {
-	return v.visitGroupingExpr(e)
+	return v.VisitGroupingExpr(e)
 }
 
 type Literal struct {
@@ -39,7 +39,7 @@ type Literal struct {
 }
 
 func (e *Literal) Accept(v Visitor) any {
-	return v.visitLiteralExpr(e)
+	return v.VisitLiteralExpr(e)
 }
 
 type Unary struct {
@@ -48,5 +48,5 @@ type Unary struct {
 }
 
 func (e *Unary) Accept(v Visitor) any {
-	return v.visitUnaryExpr(e)
+	return v.VisitUnaryExpr(e)
 }
