@@ -6,14 +6,14 @@ import (
 )
 
 type Visitor interface {
-	visitBinaryExpr(expr *Binary) any
-	visitGroupingExpr(expr *Grouping) any
-	visitLiteralExpr(expr *Literal) any
-	visitUnaryExpr(expr *Unary) any
+	VisitBinaryExpr(expr *Binary) (any, error)
+	VisitGroupingExpr(expr *Grouping) (any, error)
+	VisitLiteralExpr(expr *Literal) (any, error)
+	VisitUnaryExpr(expr *Unary) (any, error)
 }
 
 type Expr interface {
-	accept(Visitor) any
+	Accept(Visitor) (any, error)
 }
 
 type Binary struct {
@@ -22,24 +22,24 @@ type Binary struct {
 	Right    Expr
 }
 
-func (e *Binary) accept(v Visitor) any {
-	return v.visitBinaryExpr(e)
+func (e *Binary) Accept(v Visitor) (any, error) {
+	return v.VisitBinaryExpr(e)
 }
 
 type Grouping struct {
 	Expression Expr
 }
 
-func (e *Grouping) accept(v Visitor) any {
-	return v.visitGroupingExpr(e)
+func (e *Grouping) Accept(v Visitor) (any, error) {
+	return v.VisitGroupingExpr(e)
 }
 
 type Literal struct {
 	Value interface{}
 }
 
-func (e *Literal) accept(v Visitor) any {
-	return v.visitLiteralExpr(e)
+func (e *Literal) Accept(v Visitor) (any, error) {
+	return v.VisitLiteralExpr(e)
 }
 
 type Unary struct {
@@ -47,6 +47,6 @@ type Unary struct {
 	Right    Expr
 }
 
-func (e *Unary) accept(v Visitor) any {
-	return v.visitUnaryExpr(e)
+func (e *Unary) Accept(v Visitor) (any, error) {
+	return v.VisitUnaryExpr(e)
 }
