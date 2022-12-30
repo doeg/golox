@@ -13,12 +13,12 @@ func TestScanTokens(t *testing.T) {
 	tests := []struct {
 		testName       string
 		input          string
-		expected       []token.Token
+		expected       []*token.Token
 		expectedErrors []loxerror.LoxError
 	}{
 		{
 			input: "( )",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "(", Type: token.LEFT_PAREN},
 				{Line: 0, Lexeme: ")", Type: token.RIGHT_PAREN},
 				{Line: 0, Type: token.EOF},
@@ -27,35 +27,35 @@ func TestScanTokens(t *testing.T) {
 
 		{
 			input: "\"string literal\"",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "\"string literal\"", Literal: "string literal", Type: token.STRING},
 				{Line: 0, Type: token.EOF},
 			},
 		},
 		{
 			input: "\"multiline\nstring\"",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 1, Lexeme: "\"multiline\nstring\"", Literal: "multiline\nstring", Type: token.STRING},
 				{Line: 1, Type: token.EOF},
 			},
 		},
 		{
 			input: "1234",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "1234", Literal: float64(1234), Type: token.NUMBER},
 				{Line: 0, Type: token.EOF},
 			},
 		},
 		{
 			input: "12.34",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "12.34", Literal: 12.34, Type: token.NUMBER},
 				{Line: 0, Type: token.EOF},
 			},
 		},
 		{
 			input: "1*2 >= 3*4",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "1", Literal: float64(1), Type: token.NUMBER},
 				{Line: 0, Lexeme: "*", Type: token.STAR},
 				{Line: 0, Lexeme: "2", Literal: float64(2), Type: token.NUMBER},
@@ -69,7 +69,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "-12/0.34",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "-", Type: token.MINUS},
 				{Line: 0, Lexeme: "12", Literal: float64(12), Type: token.NUMBER},
 				{Line: 0, Lexeme: "/", Type: token.SLASH},
@@ -79,7 +79,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "1 != 2",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "1", Literal: float64(1), Type: token.NUMBER},
 				{Line: 0, Lexeme: "!=", Type: token.BANG_EQUAL},
 				{Line: 0, Lexeme: "2", Literal: float64(2), Type: token.NUMBER},
@@ -88,7 +88,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "a == b",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
 				{Line: 0, Lexeme: "==", Type: token.EQUAL_EQUAL},
 				{Line: 0, Lexeme: "b", Type: token.IDENTIFIER},
@@ -97,7 +97,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "a != b",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
 				{Line: 0, Lexeme: "!=", Type: token.BANG_EQUAL},
 				{Line: 0, Lexeme: "b", Type: token.IDENTIFIER},
@@ -106,7 +106,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "a = !b",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
 				{Line: 0, Lexeme: "=", Type: token.EQUAL},
 				{Line: 0, Lexeme: "!", Type: token.BANG},
@@ -116,7 +116,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "a > b",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "a", Type: token.IDENTIFIER},
 				{Line: 0, Lexeme: ">", Type: token.GREATER},
 				{Line: 0, Lexeme: "b", Type: token.IDENTIFIER},
@@ -125,14 +125,14 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "// this is a comment\n!=",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 1, Lexeme: "!=", Type: token.BANG_EQUAL},
 				{Line: 1, Type: token.EOF},
 			},
 		},
 		{
 			input: "var language = \"lox\";",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "var", Type: token.VAR},
 				{Line: 0, Lexeme: "language", Type: token.IDENTIFIER},
 				{Line: 0, Lexeme: "=", Type: token.EQUAL},
@@ -143,7 +143,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "var average = (min + max)/2;",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "var", Type: token.VAR},
 				{Line: 0, Lexeme: "average", Type: token.IDENTIFIER},
 				{Line: 0, Lexeme: "=", Type: token.EQUAL},
@@ -165,7 +165,7 @@ func TestScanTokens(t *testing.T) {
 					print a;
 				}
 			`,
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 1, Lexeme: "var", Type: token.VAR},
 				{Line: 1, Lexeme: "a", Type: token.IDENTIFIER},
 				{Line: 1, Lexeme: "=", Type: token.EQUAL},
@@ -197,7 +197,7 @@ func TestScanTokens(t *testing.T) {
 					print "no";
 				}
 			`,
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 1, Lexeme: "if", Type: token.IF},
 				{Line: 1, Lexeme: "(", Type: token.LEFT_PAREN},
 				{Line: 1, Lexeme: "condition", Type: token.IDENTIFIER},
@@ -227,7 +227,7 @@ func TestScanTokens(t *testing.T) {
 					print a;
 				}
 			`,
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 1, Lexeme: "for", Type: token.FOR},
 				{Line: 1, Lexeme: "(", Type: token.LEFT_PAREN},
 				{Line: 1, Lexeme: "var", Type: token.VAR},
@@ -258,7 +258,7 @@ func TestScanTokens(t *testing.T) {
 		},
 		{
 			input: "makeBreakfast(bagel, creamCheese, lox);",
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 0, Lexeme: "makeBreakfast", Type: token.IDENTIFIER},
 				{Line: 0, Lexeme: "(", Type: token.LEFT_PAREN},
 				{Line: 0, Lexeme: "bagel", Type: token.IDENTIFIER},
@@ -281,7 +281,7 @@ func TestScanTokens(t *testing.T) {
 					innerFunction("hello");
 				}
 			`,
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 1, Lexeme: "fun", Type: token.FUN},
 				{Line: 1, Lexeme: "outerFunction", Type: token.IDENTIFIER},
 				{Line: 1, Lexeme: "(", Type: token.LEFT_PAREN},
@@ -321,7 +321,7 @@ func TestScanTokens(t *testing.T) {
 					}
 				}
 			`,
-			expected: []token.Token{
+			expected: []*token.Token{
 				{Line: 1, Lexeme: "class", Type: token.CLASS},
 				{Line: 1, Lexeme: "Brunch", Type: token.IDENTIFIER},
 				{Line: 1, Lexeme: "<", Type: token.LESS},

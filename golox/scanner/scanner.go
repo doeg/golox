@@ -10,7 +10,7 @@ import (
 
 type Scanner struct {
 	source []byte
-	tokens []token.Token
+	tokens []*token.Token
 
 	// start points to the first character in the lexeme being scanned
 	start int
@@ -31,18 +31,18 @@ func New(source []byte) *Scanner {
 	return &Scanner{
 		errors: make([]loxerror.LoxError, 0),
 		source: source,
-		tokens: make([]token.Token, 0),
+		tokens: make([]*token.Token, 0),
 	}
 }
 
-func (scanner *Scanner) ScanTokens() ([]token.Token, []loxerror.LoxError) {
+func (scanner *Scanner) ScanTokens() ([]*token.Token, []loxerror.LoxError) {
 	for !scanner.isAtEnd() {
 		// We are at the beginning of the next lexeme
 		scanner.start = scanner.current
 		scanner.scanToken()
 	}
 
-	scanner.tokens = append(scanner.tokens, token.Token{Line: scanner.line, Type: token.EOF})
+	scanner.tokens = append(scanner.tokens, &token.Token{Line: scanner.line, Type: token.EOF})
 
 	return scanner.tokens, scanner.errors
 }
@@ -55,7 +55,7 @@ func (scanner *Scanner) addOperatorToken(tokenType token.TokenType) {
 
 func (scanner *Scanner) addToken(tokenType token.TokenType, literal interface{}) {
 	text := scanner.source[scanner.start:scanner.current]
-	scanner.tokens = append(scanner.tokens, token.Token{
+	scanner.tokens = append(scanner.tokens, &token.Token{
 		Lexeme:  string(text),
 		Line:    scanner.line,
 		Literal: literal,
