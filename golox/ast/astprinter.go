@@ -8,14 +8,14 @@ import (
 type ASTPrinter struct{}
 
 func (p *ASTPrinter) Print(expr Expr) string {
-	result := expr.accept(p).(string)
+	result := expr.Accept(p).(string)
 	return result
 }
 
 func (p *ASTPrinter) parenthesize(name string, exprs ...Expr) string {
 	strs := make([]string, 0)
 	for _, expr := range exprs {
-		strs = append(strs, expr.accept(p).(string))
+		strs = append(strs, expr.Accept(p).(string))
 	}
 
 	return fmt.Sprintf("(%s %s)", name, strings.Join(strs, " "))

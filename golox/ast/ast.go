@@ -22,7 +22,7 @@ type Binary struct {
 	Right    Expr
 }
 
-func (e *Binary) accept(v Visitor) any {
+func (e *Binary) Accept(v Visitor) any {
 	return v.visitBinaryExpr(e)
 }
 
@@ -30,7 +30,7 @@ type Grouping struct {
 	Expression Expr
 }
 
-func (e *Grouping) accept(v Visitor) any {
+func (e *Grouping) Accept(v Visitor) any {
 	return v.visitGroupingExpr(e)
 }
 
@@ -38,7 +38,7 @@ type Literal struct {
 	Value interface{}
 }
 
-func (e *Literal) accept(v Visitor) any {
+func (e *Literal) Accept(v Visitor) any {
 	return v.visitLiteralExpr(e)
 }
 
@@ -47,6 +47,6 @@ type Unary struct {
 	Right    Expr
 }
 
-func (e *Unary) accept(v Visitor) any {
+func (e *Unary) Accept(v Visitor) any {
 	return v.visitUnaryExpr(e)
 }
