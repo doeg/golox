@@ -13,7 +13,7 @@ type Visitor interface {
 }
 
 type Expr interface {
-	accept(Visitor) any
+	Accept(Visitor) any
 }
 
 type Binary struct {
