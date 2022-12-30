@@ -7,12 +7,12 @@ import(
 
 type Visitor interface {
 	{{- range .VisitorFunctions }}
-	visit{{ . }}{{ $.BaseInterface }}(expr *{{ . }}) any
+	Visit{{ . }}{{ $.BaseInterface }}(expr *{{ . }}) (any, error)
 	{{- end }}
 }
 
-type {{.BaseInterface}} interface{
-	accept(Visitor) any
+type {{.BaseInterface}} interface {
+	Accept(Visitor) (any, error)
 }
 
 {{ range .Types }}
@@ -22,7 +22,7 @@ type {{ .StructName }} struct {
 	{{- end }}
 }
 
-func (e *{{ .StructName }}) accept(v Visitor) any {
-	return v.visit{{ .StructName }}{{ $.BaseInterface }}(e)
+func (e *{{ .StructName }}) Accept(v Visitor) (any, error) {
+	return v.Visit{{ .StructName }}{{ $.BaseInterface }}(e)
 }
 {{ end }}
