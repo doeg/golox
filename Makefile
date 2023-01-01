@@ -10,6 +10,10 @@ generate:
 install:
 	go install ./...
 
+.PHONY: repl
+repl: build
+	./build/golox	
+
 .PHONY: test
 test:
 	go test -v -race ./...

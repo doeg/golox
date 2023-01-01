@@ -4,6 +4,12 @@ golox is a tree-walk interpreter for the [Lox programming language](https://gith
 
 ## Local development
 
+To start a REPL:
+
+```
+make repl
+```
+
 To build the binaries and make them globally available:
 
 ```
