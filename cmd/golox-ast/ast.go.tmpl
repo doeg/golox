@@ -5,24 +5,29 @@ import(
 	"github.com/doeg/golox/golox/token"
 )
 
-type {{ .BaseInterface }}Visitor interface {
-	{{- range .VisitorFunctions }}
-	Visit{{ . }}{{ $.BaseInterface }}(expr *{{ . }}) (any, error)
-	{{- end }}
-}
+{{ range .Interfaces }}
 
-type {{.BaseInterface}} interface {
-	Accept({{ .BaseInterface }}Visitor) (any, error)
-}
+	{{ $interface := . }}
 
-{{ range .Types }}
-type {{ .StructName }} struct {
-	{{- range .Fields }}
-	{{ .Name | ToTitle }} {{ .Type }}
-	{{- end }}
-}
+	type {{ .BaseInterface }}Visitor interface {
+		{{- range .VisitorFunctions }}
+			Visit{{ . }}{{ $interface.BaseInterface }}(expr *{{ . }}{{ $interface.BaseInterface }}) (any, error)
+		{{- end }}
+	}
 
-func (e *{{ .StructName }}) Accept(v {{ $.BaseInterface }}Visitor) (any, error) {
-	return v.Visit{{ .StructName }}{{ $.BaseInterface }}(e)
-}
+	type {{.BaseInterface}} interface {
+		Accept({{ .BaseInterface }}Visitor) (any, error)
+	}
+
+	{{ range .Types }}
+		type {{ .StructName }}{{ $interface.BaseInterface }} struct {
+			{{- range .Fields }}
+			{{ .Name | ToTitle }} {{ .Type }}
+			{{- end }}
+		}
+
+		func (e *{{ .StructName }}{{ $interface.BaseInterface }}) Accept(v {{ $interface.BaseInterface }}Visitor) (any, error) {
+			return v.Visit{{ .StructName }}{{ $interface.BaseInterface }}(e)
+		}
+	{{ end }}
 {{ end }}

@@ -6,47 +6,72 @@ import (
 )
 
 type ExprVisitor interface {
-	VisitBinaryExpr(expr *Binary) (any, error)
-	VisitGroupingExpr(expr *Grouping) (any, error)
-	VisitLiteralExpr(expr *Literal) (any, error)
-	VisitUnaryExpr(expr *Unary) (any, error)
+	VisitBinaryExpr(expr *BinaryExpr) (any, error)
+	VisitGroupingExpr(expr *GroupingExpr) (any, error)
+	VisitLiteralExpr(expr *LiteralExpr) (any, error)
+	VisitUnaryExpr(expr *UnaryExpr) (any, error)
 }
 
 type Expr interface {
 	Accept(ExprVisitor) (any, error)
 }
 
-type Binary struct {
+type BinaryExpr struct {
 	Left     Expr
 	Operator *token.Token
 	Right    Expr
 }
 
-func (e *Binary) Accept(v ExprVisitor) (any, error) {
+func (e *BinaryExpr) Accept(v ExprVisitor) (any, error) {
 	return v.VisitBinaryExpr(e)
 }
 
-type Grouping struct {
+type GroupingExpr struct {
 	Expression Expr
 }
 
-func (e *Grouping) Accept(v ExprVisitor) (any, error) {
+func (e *GroupingExpr) Accept(v ExprVisitor) (any, error) {
 	return v.VisitGroupingExpr(e)
 }
 
-type Literal struct {
+type LiteralExpr struct {
 	Value interface{}
 }
 
-func (e *Literal) Accept(v ExprVisitor) (any, error) {
+func (e *LiteralExpr) Accept(v ExprVisitor) (any, error) {
 	return v.VisitLiteralExpr(e)
 }
 
-type Unary struct {
+type UnaryExpr struct {
 	Operator *token.Token
 	Right    Expr
 }
 
-func (e *Unary) Accept(v ExprVisitor) (any, error) {
+func (e *UnaryExpr) Accept(v ExprVisitor) (any, error) {
 	return v.VisitUnaryExpr(e)
+}
+
+type StmtVisitor interface {
+	VisitExpressionStmt(expr *ExpressionStmt) (any, error)
+	VisitPrintStmt(expr *PrintStmt) (any, error)
+}
+
+type Stmt interface {
+	Accept(StmtVisitor) (any, error)
+}
+
+type ExpressionStmt struct {
+	Expression Expr
+}
+
+func (e *ExpressionStmt) Accept(v StmtVisitor) (any, error) {
+	return v.VisitExpressionStmt(e)
+}
+
+type PrintStmt struct {
+	Expression Expr
+}
+
+func (e *PrintStmt) Accept(v StmtVisitor) (any, error) {
+	return v.VisitPrintStmt(e)
 }

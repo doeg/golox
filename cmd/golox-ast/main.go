@@ -5,48 +5,29 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"flag"
 	"go/format"
+	"html/template"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
-	"text/template"
 )
 
-var outputFlag = flag.String("output", "./golox/ast/ast.go", "a filepath for the generated output")
-
-var ast = []string{
-	"Binary		:	Expr left, Token operator, Expr right",
-	"Grouping	:	Expr expression",
-	"Literal	:	Object value",
-	"Unary		:	Token operator, Expr right",
-}
-
+// Embed the ast.go template file so that we don't have to mess with
+// file I/O, relative pathnames, etc. etc.
+//
 //go:embed ast.go.tmpl
 var tmpl string
 
-func main() {
-	flag.Parse()
-
-	abs, err := filepath.Abs(*outputFlag)
-	if err != nil {
-		panic(err)
-	}
-
-	os.MkdirAll(filepath.Dir(abs), 0700)
-
-	f, err := os.Create(abs)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	if err = defineAST(f, "Expr", ast); err != nil {
-		panic(err)
-	}
-}
+// The full path of the output file, relative to the project root
+const outPath string = "./golox/ast/"
+const outName string = "ast.go"
 
 type TemplateParams struct {
+	Interfaces []ASTInterface
+}
+
+type ASTInterface struct {
 	BaseInterface    string
 	Types            []ExpressionDef
 	VisitorFunctions []string
@@ -62,93 +43,106 @@ type ExpressionField struct {
 	Type string
 }
 
-// defineAST prints AST type definitions given a list of Lox grammar rules.
-func defineAST(f *os.File, baseName string, grammar []string) error {
+func main() {
+	interfaces := []ASTInterface{
+		defineAST("Expr", []string{
+			"Binary		:	Expr left, Token operator, Expr right",
+			"Grouping	:	Expr expression",
+			"Literal	:	Object value",
+			"Unary		:	Token operator, Expr right",
+		}),
+		defineAST("Stmt", []string{
+			"Expression	: Expr expression",
+			"Print		: Expr expression",
+		}),
+	}
+
+	t, err := template.New("golox-ast").Funcs(template.FuncMap{
+		"ToTitle": strings.Title,
+	}).Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+
+	var buf bytes.Buffer
+	if err = t.Execute(&buf, TemplateParams{
+		Interfaces: interfaces,
+	}); err != nil {
+		panic(err)
+	}
+
+	// Nicely format the go source code :)
+	p, err := format.Source(buf.Bytes())
+	if err != nil {
+		panic(err)
+	}
+
+	abs, err := filepath.Abs(outPath)
+	if err != nil {
+		panic(err)
+	}
+
+	// The directory should pretty much _always_ exist,
+	// but recursively create it just in case we're doing something dumb.
+	os.MkdirAll(abs, 0700)
+
+	// Create the ast.go file, overwriting anything that's currently there.
+	filePath := path.Join(abs, outName)
+	f, err := os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	// Finally, write the formatted ast.go source to disk.
+	if _, err := f.Write(p); err != nil {
+		panic(err)
+	}
+}
+
+func defineAST(baseInterface string, rules []string) ASTInterface {
 	defs := make([]ExpressionDef, 0)
 	visitorFunctions := make([]string, 0)
 
 	// This is pretty gross but, as the book mentions, robustness
 	// ain't a priority :cowboy:
-	for _, e := range grammar {
-		parts := strings.Split(e, ":")
-
+	for _, rule := range rules {
+		parts := strings.Split(rule, ":")
 		structName := strings.TrimSpace(parts[0])
-		fields := strings.TrimSpace(parts[1])
+		fieldList := strings.Split(strings.TrimSpace(parts[1]), ",")
 
-		defs = append(defs, defineStruct(structName, fields))
+		fields := make([]ExpressionField, 0)
+		for _, fp := range fieldList {
+			p := strings.Split(strings.TrimSpace(fp), " ")
+
+			// Crafting Interpreters defines field types in a Java-ish way.
+			// For the sake of... consistency? I've decided to keep the AST definition
+			// (in its text form) exactly as the book has it. It does, however, necessitate
+			// this ugly little switch statement to exorcise the Java-isms.
+			fieldType := p[0]
+			switch fieldType {
+			case "Object":
+				fieldType = "interface{}"
+			case "Token":
+				fieldType = "*token.Token"
+			}
+
+			fields = append(fields, ExpressionField{
+				Name: p[1],
+				Type: fieldType,
+			})
+		}
+
+		defs = append(defs, ExpressionDef{
+			StructName: structName,
+			Fields:     fields,
+		})
 		visitorFunctions = append(visitorFunctions, structName)
 	}
 
-	t, err := template.New("golox-ast").Funcs(template.FuncMap{
-		// strings.Title is deprecated but it only really matters for Unicode text,
-		// which Lox is not. :)
-		"ToTitle": strings.Title,
-	}).Parse(tmpl)
-	if err != nil {
-		return err
-	}
-
-	var buf bytes.Buffer
-	if err = t.Execute(&buf, TemplateParams{
-		BaseInterface:    baseName,
+	return ASTInterface{
+		BaseInterface:    baseInterface,
 		Types:            defs,
 		VisitorFunctions: visitorFunctions,
-	}); err != nil {
-		return err
-	}
-
-	// Nicely format the go source code
-	p, err := format.Source(buf.Bytes())
-	if err != nil {
-		return err
-	}
-
-	if _, err := f.Write(p); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// defineStruct generates the struct name and fields for a node in the AST; for example:
-//
-//	defineStruct("Unary", "Token operator, Expr right")
-//
-// ...will return:
-//
-//	{
-//		StructName: "Unary",
-//		Fields: [
-//			{ Name: "operator", Type: "*token.Token" },
-//			{ Name: "right", Type: "Expr" },
-//		],
-//	}
-func defineStruct(structName, fieldList string) ExpressionDef {
-	fields := make([]ExpressionField, 0)
-
-	for _, fp := range strings.Split(fieldList, ",") {
-		p := strings.Split(strings.TrimSpace(fp), " ")
-
-		// Crafting Interpreters defines field types in a Java-ish way.
-		// For the sake of... consistency? I've decided to keep the AST definition
-		// (in its text form) exactly as the book has it. It does, however, necessitate
-		// this ugly little switch statement to exorcise the Java-isms.
-		fieldType := p[0]
-		switch fieldType {
-		case "Object":
-			fieldType = "interface{}"
-		case "Token":
-			fieldType = "*token.Token"
-		}
-
-		fields = append(fields, ExpressionField{
-			Name: p[1],
-			Type: fieldType,
-		})
-	}
-
-	return ExpressionDef{
-		StructName: structName,
-		Fields:     fields,
 	}
 }
