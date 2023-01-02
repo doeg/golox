@@ -5,43 +5,26 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"flag"
 	"go/format"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
 )
 
-var outputFlag = flag.String("output", "./golox/ast/ast.go", "a filepath for the generated output")
-
-var ast = []string{
-	"Binary		:	Expr left, Token operator, Expr right",
-	"Grouping	:	Expr expression",
-	"Literal	:	Object value",
-	"Unary		:	Token operator, Expr right",
-}
+const outDir = "./golox/ast/"
 
 //go:embed ast.go.tmpl
 var tmpl string
 
 func main() {
-	flag.Parse()
-
-	abs, err := filepath.Abs(*outputFlag)
-	if err != nil {
-		panic(err)
-	}
-
-	os.MkdirAll(filepath.Dir(abs), 0700)
-
-	f, err := os.Create(abs)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	if err = defineAST(f, "Expr", ast); err != nil {
+	if err := defineAST("expr.go", "Expr", []string{
+		"Binary		:	Expr left, Token operator, Expr right",
+		"Grouping	:	Expr expression",
+		"Literal	:	Object value",
+		"Unary		:	Token operator, Expr right",
+	}); err != nil {
 		panic(err)
 	}
 }
@@ -63,7 +46,7 @@ type ExpressionField struct {
 }
 
 // defineAST prints AST type definitions given a list of Lox grammar rules.
-func defineAST(f *os.File, baseName string, grammar []string) error {
+func defineAST(fileName, baseName string, grammar []string) error {
 	defs := make([]ExpressionDef, 0)
 	visitorFunctions := make([]string, 0)
 
@@ -103,11 +86,12 @@ func defineAST(f *os.File, baseName string, grammar []string) error {
 		return err
 	}
 
-	if _, err := f.Write(p); err != nil {
-		return err
-	}
+	return writeFile(fileName, p)
+	// if _, err := f.Write(p); err != nil {
+	// 	return err
+	// }
 
-	return nil
+	// return nil
 }
 
 // defineStruct generates the struct name and fields for a node in the AST; for example:
@@ -151,4 +135,24 @@ func defineStruct(structName, fieldList string) ExpressionDef {
 		StructName: structName,
 		Fields:     fields,
 	}
+}
+
+func writeFile(fileName string, output []byte) error {
+
+	outDirAbs, err := filepath.Abs(outDir)
+	if err != nil {
+		panic(err)
+	}
+
+	os.MkdirAll(outDirAbs, 0700)
+
+	filePath := path.Join(outDirAbs, fileName)
+	f, err := os.Create(filePath)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+
+	_, err = f.Write(output)
+	return err
 }
