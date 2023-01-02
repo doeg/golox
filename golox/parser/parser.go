@@ -33,7 +33,7 @@ func New(tokens []*token.Token) *Parser {
 // Parse as many statements as we can find until we hit the end
 // of the input. This is an implementation of the grammar rule:
 //
-//	program -> statement* EOF
+//	program -> declaration* EOF
 func (p *Parser) Parse() ([]ast.Stmt, error) {
 	statements := make([]ast.Stmt, 0)
 	for {
@@ -46,7 +46,7 @@ func (p *Parser) Parse() ([]ast.Stmt, error) {
 			break
 		}
 
-		stmt, err := p.statement()
+		stmt, err := p.declaration()
 		if err != nil {
 			return nil, err
 		}
@@ -55,6 +55,68 @@ func (p *Parser) Parse() ([]ast.Stmt, error) {
 	}
 
 	return statements, nil
+}
+
+// A variable declaration statement brings a new variable into the world:
+//
+//	var beverage = "expresso";
+//
+// This implements the following grammar rule:
+//
+//	declaration -> varDecl | statement ;
+func (p *Parser) declaration() (ast.Stmt, error) {
+	// Check if the declaration is a variable declaration
+	isVar, err := p.match(token.VAR)
+	if err != nil {
+		return nil, err
+	} else if isVar {
+		return p.varDeclaration()
+	}
+
+	stmt, err := p.statement()
+	if err != nil {
+		// This is disgusting wtf
+		if err = p.synchronize(); err != nil {
+			// Unexpected error when synchronizing
+			return nil, err
+		}
+		// ParseError
+		return nil, err
+	}
+
+	return stmt, nil
+}
+
+// This implements the following grammar rule:
+//
+//	varDecl -> "var" IDENTIFIER ( "=" expression )? ";" ;
+func (p *Parser) varDeclaration() (ast.Stmt, error) {
+	name, err := p.consume(token.IDENTIFIER, "expected variable name")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer ast.Expr
+	isInitializer, err := p.match(token.EQUAL)
+	if err != nil {
+		return nil, err
+	} else if isInitializer {
+		i, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		initializer = i
+	}
+
+	_, err = p.consume(token.SEMICOLON, "expect ';' after variable declaration")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.VarStmt{
+		Name:        name,
+		Initializer: initializer,
+	}, nil
 }
 
 // advance consumes the current token and returns it
@@ -133,22 +195,22 @@ func (p *Parser) comparison() (ast.Expr, error) {
 // consume checks to see if the next token is of the expected type.
 // If so, it consumes the token. If some other token is there, then we've
 // hit an error.
-func (p *Parser) consume(tokenType token.TokenType, message string) error {
+func (p *Parser) consume(tokenType token.TokenType, message string) (*token.Token, error) {
 	isMatch, err := p.check(tokenType)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !isMatch {
-		return errors.New(message)
+		return nil, errors.New(message)
 	}
 
-	_, err = p.advance()
+	tok, err := p.advance()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return tok, nil
 }
 
 // equality implements the following grammar rule:
@@ -284,7 +346,8 @@ func (p *Parser) previous() (*token.Token, error) {
 // primary implements the following grammar rule:
 //
 //	primary -> 	NUMBER | STRING | "true" | "false" | "nil"
-//				| "(" expression ")" ;
+//				| "(" expression ")"
+//				| IDENTIFIER ;
 func (p *Parser) primary() (ast.Expr, error) {
 	isMatch, err := p.match(token.FALSE)
 	if err != nil {
@@ -316,7 +379,19 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return nil, err
 		}
 
-		return &ast.LiteralExpr{Value: prev.Literal}, err
+		return &ast.LiteralExpr{Value: prev.Literal}, nil
+	}
+
+	isMatch, err = p.match(token.IDENTIFIER)
+	if err != nil {
+		return nil, err
+	} else if isMatch {
+		prev, err := p.previous()
+		if err != nil {
+			return nil, err
+		}
+
+		return &ast.VariableExpr{Name: prev}, nil
 	}
 
 	isMatch, err = p.match(token.LEFT_PAREN)
@@ -328,7 +403,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return nil, err
 		}
 
-		err = p.consume(token.RIGHT_PAREN, ErrExpectClosingParen)
+		_, err = p.consume(token.RIGHT_PAREN, ErrExpectClosingParen)
 		if err != nil {
 			return nil, err
 		}
@@ -351,7 +426,7 @@ func (p *Parser) expressionStatement() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	if err = p.consume(token.SEMICOLON, "expected ';' after value"); err != nil {
+	if _, err = p.consume(token.SEMICOLON, "expected ';' after value"); err != nil {
 		return nil, err
 	}
 
@@ -369,7 +444,7 @@ func (p *Parser) printStatement() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	if err = p.consume(token.SEMICOLON, "expected ';' after value"); err != nil {
+	if _, err = p.consume(token.SEMICOLON, "expected ';' after value"); err != nil {
 		return nil, err
 	}
 
