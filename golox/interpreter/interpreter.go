@@ -5,17 +5,21 @@ import (
 	"fmt"
 
 	"github.com/doeg/golox/golox/ast"
+	"github.com/doeg/golox/golox/environment"
 	"github.com/doeg/golox/golox/token"
 )
 
-type Interpreter struct{}
+type Interpreter struct {
+	env *environment.Environment
+}
 
 func New() *Interpreter {
-	return &Interpreter{}
+	return &Interpreter{
+		env: environment.New(),
+	}
 }
 
 func (i *Interpreter) Interpret(statements []ast.Stmt) (any, error) {
-	// return i.evaluate(expr)
 	for _, stmt := range statements {
 		_, err := i.execute(stmt)
 		if err != nil {
@@ -45,6 +49,20 @@ func (i *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) (any, error) {
 	// TODO do we always want to write to stdout by default...?
 	fmt.Printf("%+v\n", val)
 
+	return nil, nil
+}
+
+func (i *Interpreter) VisitVarStmt(stmt *ast.VarStmt) (any, error) {
+	var val any
+	if stmt.Initializer != nil {
+		v, err := i.evaluate(stmt.Initializer)
+		if err != nil {
+			return nil, err
+		}
+		val = v
+	}
+
+	i.env.Define(stmt.Name.Lexeme, val)
 	return nil, nil
 }
 
@@ -185,6 +203,10 @@ func (i *Interpreter) checkStringOperands(left, right any) (string, string, erro
 
 func (i *Interpreter) evaluate(expr ast.Expr) (any, error) {
 	return expr.Accept(i)
+}
+
+func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) (any, error) {
+	return i.env.Get(expr.Name)
 }
 
 func (i *Interpreter) isEqual(a, b any) (bool, error) {

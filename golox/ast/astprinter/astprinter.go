@@ -47,3 +47,7 @@ func (p *ASTPrinter) VisitLiteralExpr(expr *ast.LiteralExpr) (any, error) {
 func (p *ASTPrinter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
 	return p.parenthesize(expr.Operator.Lexeme, expr.Right)
 }
+
+func (p *ASTPrinter) VisitVariableExpr(expr *ast.VariableExpr) (any, error) {
+	return p.parenthesize("var", expr)
+}

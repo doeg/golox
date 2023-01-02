@@ -10,6 +10,12 @@ To start a REPL:
 make repl
 ```
 
+To run a .lox file:
+
+```
+make && ./build/golox path/to/file.lox
+```
+
 To build the binaries and make them globally available:
 
 ```
