@@ -17,7 +17,7 @@ func (i *Interpreter) Interpret(expr ast.Expr) (any, error) {
 	return i.evaluate(expr)
 }
 
-func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) (any, error) {
+func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
 		return nil, err
@@ -97,15 +97,15 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) (any, error) {
 	return nil, errors.New("invalid binary operator")
 }
 
-func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping) (any, error) {
+func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) (any, error) {
 	return i.evaluate(expr.Expression)
 }
 
-func (i *Interpreter) VisitLiteralExpr(expr *ast.Literal) (any, error) {
+func (i *Interpreter) VisitLiteralExpr(expr *ast.LiteralExpr) (any, error) {
 	return expr.Value, nil
 }
 
-func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary) (any, error) {
+func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
 	// Unary expressions have a single sub-expression that we evaluate first.
 	right, err := i.evaluate(expr.Right)
 	if err != nil {

@@ -20,40 +20,40 @@ func TestParse(t *testing.T) {
 	}{
 		{
 			input:    "123",
-			expected: &ast.Literal{Value: float64(123)},
+			expected: &ast.LiteralExpr{Value: float64(123)},
 		},
 		{
 			input:    "\"hello, world\"",
-			expected: &ast.Literal{Value: "hello, world"},
+			expected: &ast.LiteralExpr{Value: "hello, world"},
 		},
 		{
 			input:    "true",
-			expected: &ast.Literal{Value: true},
+			expected: &ast.LiteralExpr{Value: true},
 		},
 		{
 			input:    "false",
-			expected: &ast.Literal{Value: false},
+			expected: &ast.LiteralExpr{Value: false},
 		},
 		{
 			input:    "nil",
-			expected: &ast.Literal{Value: nil},
+			expected: &ast.LiteralExpr{Value: nil},
 		},
 		{
 			input: "-1",
-			expected: &ast.Unary{
+			expected: &ast.UnaryExpr{
 				Operator: &token.Token{
 					Lexeme: "-",
 					Line:   0,
 					Type:   token.MINUS,
 				},
-				Right: &ast.Literal{Value: float64(1)},
+				Right: &ast.LiteralExpr{Value: float64(1)},
 			},
 		},
 		{
 			input: "5 - 3 - 1",
-			expected: &ast.Binary{
-				Left: &ast.Binary{
-					Left: &ast.Literal{
+			expected: &ast.BinaryExpr{
+				Left: &ast.BinaryExpr{
+					Left: &ast.LiteralExpr{
 						Value: float64(5),
 					},
 					Operator: &token.Token{
@@ -61,7 +61,7 @@ func TestParse(t *testing.T) {
 						Line:   0,
 						Type:   token.MINUS,
 					},
-					Right: &ast.Literal{
+					Right: &ast.LiteralExpr{
 						Value: float64(3),
 					},
 				},
@@ -70,15 +70,15 @@ func TestParse(t *testing.T) {
 					Line:   0,
 					Type:   token.MINUS,
 				},
-				Right: &ast.Literal{
+				Right: &ast.LiteralExpr{
 					Value: float64(1),
 				},
 			},
 		},
 		{
 			input: "5 - 3 * 1",
-			expected: &ast.Binary{
-				Left: &ast.Literal{
+			expected: &ast.BinaryExpr{
+				Left: &ast.LiteralExpr{
 					Value: float64(5),
 				},
 				Operator: &token.Token{
@@ -86,8 +86,8 @@ func TestParse(t *testing.T) {
 					Line:   0,
 					Type:   token.MINUS,
 				},
-				Right: &ast.Binary{
-					Left: &ast.Literal{
+				Right: &ast.BinaryExpr{
+					Left: &ast.LiteralExpr{
 						Value: float64(3),
 					},
 					Operator: &token.Token{
@@ -95,7 +95,7 @@ func TestParse(t *testing.T) {
 						Line:   0,
 						Type:   token.STAR,
 					},
-					Right: &ast.Literal{
+					Right: &ast.LiteralExpr{
 						Value: float64(1),
 					},
 				},
@@ -103,10 +103,10 @@ func TestParse(t *testing.T) {
 		},
 		{
 			input: "(5 - 3) * 1",
-			expected: &ast.Binary{
-				Left: &ast.Grouping{
-					Expression: &ast.Binary{
-						Left: &ast.Literal{
+			expected: &ast.BinaryExpr{
+				Left: &ast.GroupingExpr{
+					Expression: &ast.BinaryExpr{
+						Left: &ast.LiteralExpr{
 							Value: float64(5),
 						},
 						Operator: &token.Token{
@@ -114,7 +114,7 @@ func TestParse(t *testing.T) {
 							Line:   0,
 							Type:   token.MINUS,
 						},
-						Right: &ast.Literal{
+						Right: &ast.LiteralExpr{
 							Value: float64(3),
 						},
 					},
@@ -124,29 +124,29 @@ func TestParse(t *testing.T) {
 					Line:   0,
 					Type:   token.STAR,
 				},
-				Right: &ast.Literal{
+				Right: &ast.LiteralExpr{
 					Value: float64(1),
 				},
 			},
 		},
 		{
 			input: "-69 < 420 == true",
-			expected: &ast.Binary{
-				Left: &ast.Binary{
-					Left: &ast.Unary{
+			expected: &ast.BinaryExpr{
+				Left: &ast.BinaryExpr{
+					Left: &ast.UnaryExpr{
 						Operator: &token.Token{
 							Lexeme: "-",
 							Line:   0,
 							Type:   token.MINUS,
 						},
-						Right: &ast.Literal{Value: float64(69)},
+						Right: &ast.LiteralExpr{Value: float64(69)},
 					},
 					Operator: &token.Token{
 						Lexeme: "<",
 						Line:   0,
 						Type:   token.LESS,
 					},
-					Right: &ast.Literal{
+					Right: &ast.LiteralExpr{
 						Value: float64(420),
 					},
 				},
@@ -155,7 +155,7 @@ func TestParse(t *testing.T) {
 					Line:   0,
 					Type:   token.EQUAL_EQUAL,
 				},
-				Right: &ast.Literal{Value: true},
+				Right: &ast.LiteralExpr{Value: true},
 			},
 		},
 		{

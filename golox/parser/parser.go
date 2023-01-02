@@ -103,7 +103,7 @@ func (p *Parser) comparison() (ast.Expr, error) {
 			return nil, err
 		}
 
-		expr = &ast.Binary{
+		expr = &ast.BinaryExpr{
 			Left:     expr,
 			Operator: operator,
 			Right:    right,
@@ -163,7 +163,7 @@ func (p *Parser) equality() (ast.Expr, error) {
 			return nil, err
 		}
 
-		expr = &ast.Binary{
+		expr = &ast.BinaryExpr{
 			Left:     expr,
 			Operator: operator,
 			Right:    right,
@@ -209,7 +209,7 @@ func (p *Parser) factor() (ast.Expr, error) {
 			return nil, err
 		}
 
-		expr = &ast.Binary{
+		expr = &ast.BinaryExpr{
 			Left:     expr,
 			Operator: operator,
 			Right:    right,
@@ -273,21 +273,21 @@ func (p *Parser) primary() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	} else if isMatch {
-		return &ast.Literal{Value: false}, nil
+		return &ast.LiteralExpr{Value: false}, nil
 	}
 
 	isMatch, err = p.match(token.TRUE)
 	if err != nil {
 		return nil, err
 	} else if isMatch {
-		return &ast.Literal{Value: true}, nil
+		return &ast.LiteralExpr{Value: true}, nil
 	}
 
 	isMatch, err = p.match(token.NIL)
 	if err != nil {
 		return nil, err
 	} else if isMatch {
-		return &ast.Literal{Value: nil}, nil
+		return &ast.LiteralExpr{Value: nil}, nil
 	}
 
 	isMatch, err = p.match(token.NUMBER, token.STRING)
@@ -299,7 +299,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return nil, err
 		}
 
-		return &ast.Literal{Value: prev.Literal}, err
+		return &ast.LiteralExpr{Value: prev.Literal}, err
 	}
 
 	isMatch, err = p.match(token.LEFT_PAREN)
@@ -316,7 +316,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return nil, err
 		}
 
-		return &ast.Grouping{
+		return &ast.GroupingExpr{
 			Expression: expr,
 		}, nil
 	}
@@ -397,7 +397,7 @@ func (p *Parser) term() (ast.Expr, error) {
 			return nil, err
 		}
 
-		expr = &ast.Binary{
+		expr = &ast.BinaryExpr{
 			Left:     expr,
 			Operator: operator,
 			Right:    right,
@@ -428,7 +428,7 @@ func (p *Parser) unary() (ast.Expr, error) {
 			return nil, err
 		}
 
-		return &ast.Unary{
+		return &ast.UnaryExpr{
 			Operator: operator,
 			Right:    right,
 		}, nil
