@@ -14,4 +14,7 @@
 # Build files
 build/
 
+# Test .lox files, etc. 
+tmp/
+
 .vscode/
