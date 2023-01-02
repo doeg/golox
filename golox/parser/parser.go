@@ -30,14 +30,31 @@ func New(tokens []*token.Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() (ast.Expr, error) {
-	expr, err := p.expression()
-	if err != nil {
-		// TODO check if instance of LoxParseError
-		// TODO the book returns nil here :thinking:
-		return nil, err
+// Parse as many statements as we can find until we hit the end
+// of the input. This is an implementation of the grammar rule:
+//
+//	program -> statement* EOF
+func (p *Parser) Parse() ([]ast.Stmt, error) {
+	statements := make([]ast.Stmt, 0)
+	for {
+		atEnd, err := p.isAtEnd()
+		if err != nil {
+			return nil, err
+		}
+
+		if atEnd {
+			break
+		}
+
+		stmt, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+
+		statements = append(statements, stmt)
 	}
-	return expr, nil
+
+	return statements, nil
 }
 
 // advance consumes the current token and returns it
@@ -323,6 +340,56 @@ func (p *Parser) primary() (ast.Expr, error) {
 
 	// TODO return a LoxError instead of a regular error for unrecognized type
 	return nil, errors.New(ErrExpectExpression)
+}
+
+// expressionStatement implements the following grammar rule:
+//
+//	exprStmt -> expression ";" ;
+func (p *Parser) expressionStatement() (ast.Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = p.consume(token.SEMICOLON, "expected ';' after value"); err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionStmt{
+		Expression: expr,
+	}, nil
+}
+
+// printStatement implements the following grammar rule:
+//
+//	printStmt -> "print" expression ";" ;
+func (p *Parser) printStatement() (ast.Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = p.consume(token.SEMICOLON, "expected ';' after value"); err != nil {
+		return nil, err
+	}
+
+	return &ast.PrintStmt{
+		Expression: expr,
+	}, nil
+}
+
+// statement implements the following grammar rule:
+//
+//	statement -> exprStmt | printStmt ;
+func (p *Parser) statement() (ast.Stmt, error) {
+	isPrint, err := p.match(token.PRINT)
+	if err != nil {
+		return nil, err
+	} else if isPrint {
+		return p.printStatement()
+	}
+
+	return p.expressionStatement()
 }
 
 // synchronize discards tokens until we're at the beginning of a new statement.
