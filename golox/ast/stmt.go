@@ -2,23 +2,23 @@
 package ast
 
 import (
-	"github.com/doeg/golox/golox/token"
+	// "github.com/doeg/golox/golox/token"
 )
 
-type Visitor interface {
+type StmtVisitor interface {
 	VisitExpressionStmt(expr *Expression) (any, error)
 	VisitPrintStmt(expr *Print) (any, error)
 }
 
 type Stmt interface {
-	Accept(Visitor) (any, error)
+	Accept(StmtVisitor) (any, error)
 }
 
 type Expression struct {
 	Expression Expr
 }
 
-func (e *Expression) Accept(v Visitor) (any, error) {
+func (e *Expression) Accept(v StmtVisitor) (any, error) {
 	return v.VisitExpressionStmt(e)
 }
 
@@ -26,6 +26,6 @@ type Print struct {
 	Expression Expr
 }
 
-func (e *Print) Accept(v Visitor) (any, error) {
+func (e *Print) Accept(v StmtVisitor) (any, error) {
 	return v.VisitPrintStmt(e)
 }
