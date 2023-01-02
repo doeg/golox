@@ -30,19 +30,19 @@ func repl() {
 		}
 
 		p := parser.New(tokens)
-		expr, err := p.Parse()
+		stmts, err := p.Parse()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
 		i := interpreter.New()
-		result, err := i.Interpret(expr)
+
+		// TODO consider automatically printing the value of evaluated expressions...?
+		_, err = i.Interpret(stmts)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-
-		fmt.Printf("%+v\n", result)
 	}
 }

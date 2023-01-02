@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/doeg/golox/golox/ast"
 	"github.com/doeg/golox/golox/token"
@@ -13,8 +14,38 @@ func New() *Interpreter {
 	return &Interpreter{}
 }
 
-func (i *Interpreter) Interpret(expr ast.Expr) (any, error) {
-	return i.evaluate(expr)
+func (i *Interpreter) Interpret(statements []ast.Stmt) (any, error) {
+	// return i.evaluate(expr)
+	for _, stmt := range statements {
+		_, err := i.execute(stmt)
+		if err != nil {
+			// TODO Lox runtime error here
+			return nil, err
+		}
+	}
+
+	return nil, nil
+}
+
+func (i *Interpreter) execute(stmt ast.Stmt) (any, error) {
+	return stmt.Accept(i)
+}
+
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (any, error) {
+	_, err := i.evaluate(stmt.Expression)
+	return nil, err
+}
+
+func (i *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) (any, error) {
+	val, err := i.evaluate(stmt.Expression)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO do we always want to write to stdout by default...?
+	fmt.Printf("%+v\n", val)
+
+	return nil, nil
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
