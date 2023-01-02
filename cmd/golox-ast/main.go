@@ -27,6 +27,13 @@ func main() {
 	}); err != nil {
 		panic(err)
 	}
+
+	if err := defineAST("stmt.go", "Stmt", []string{
+		"Expression : Expr expression",
+		"Print      : Expr expression",
+	}); err != nil {
+		panic(err)
+	}
 }
 
 type TemplateParams struct {
