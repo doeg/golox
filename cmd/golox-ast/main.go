@@ -19,7 +19,7 @@ const outDir = "./golox/ast/"
 var tmpl string
 
 func main() {
-	if err := defineAST("expr.go", "Expr", []string{
+	if err := defineAST("expr.go", "expr", "Expr", []string{
 		"Binary		:	Expr left, Token operator, Expr right",
 		"Grouping	:	Expr expression",
 		"Literal	:	Object value",
@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := defineAST("stmt.go", "Stmt", []string{
+	if err := defineAST("stmt.go", "stmt", "Stmt", []string{
 		"Expression : Expr expression",
 		"Print      : Expr expression",
 	}); err != nil {
@@ -38,6 +38,7 @@ func main() {
 
 type TemplateParams struct {
 	BaseInterface    string
+	PackageName      string
 	Types            []ExpressionDef
 	VisitorFunctions []string
 }
@@ -53,7 +54,7 @@ type ExpressionField struct {
 }
 
 // defineAST prints AST type definitions given a list of Lox grammar rules.
-func defineAST(fileName, baseName string, grammar []string) error {
+func defineAST(fileName, packageName, baseName string, grammar []string) error {
 	defs := make([]ExpressionDef, 0)
 	visitorFunctions := make([]string, 0)
 
@@ -81,6 +82,7 @@ func defineAST(fileName, baseName string, grammar []string) error {
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, TemplateParams{
 		BaseInterface:    baseName,
+		PackageName:      packageName,
 		Types:            defs,
 		VisitorFunctions: visitorFunctions,
 	}); err != nil {
@@ -93,7 +95,7 @@ func defineAST(fileName, baseName string, grammar []string) error {
 		return err
 	}
 
-	return writeFile(fileName, p)
+	return writeFile(fileName, packageName, p)
 	// if _, err := f.Write(p); err != nil {
 	// 	return err
 	// }
@@ -144,9 +146,8 @@ func defineStruct(structName, fieldList string) ExpressionDef {
 	}
 }
 
-func writeFile(fileName string, output []byte) error {
-
-	outDirAbs, err := filepath.Abs(outDir)
+func writeFile(fileName, packageName string, output []byte) error {
+	outDirAbs, err := filepath.Abs(path.Join(outDir, packageName))
 	if err != nil {
 		panic(err)
 	}
