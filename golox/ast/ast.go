@@ -10,6 +10,7 @@ type ExprVisitor interface {
 	VisitGroupingExpr(expr *GroupingExpr) (any, error)
 	VisitLiteralExpr(expr *LiteralExpr) (any, error)
 	VisitUnaryExpr(expr *UnaryExpr) (any, error)
+	VisitVariableExpr(expr *VariableExpr) (any, error)
 }
 
 type Expr interface {
@@ -51,9 +52,18 @@ func (e *UnaryExpr) Accept(v ExprVisitor) (any, error) {
 	return v.VisitUnaryExpr(e)
 }
 
+type VariableExpr struct {
+	Name *token.Token
+}
+
+func (e *VariableExpr) Accept(v ExprVisitor) (any, error) {
+	return v.VisitVariableExpr(e)
+}
+
 type StmtVisitor interface {
 	VisitExpressionStmt(expr *ExpressionStmt) (any, error)
 	VisitPrintStmt(expr *PrintStmt) (any, error)
+	VisitVarStmt(expr *VarStmt) (any, error)
 }
 
 type Stmt interface {
@@ -74,4 +84,13 @@ type PrintStmt struct {
 
 func (e *PrintStmt) Accept(v StmtVisitor) (any, error) {
 	return v.VisitPrintStmt(e)
+}
+
+type VarStmt struct {
+	Name        *token.Token
+	Initializer Expr
+}
+
+func (e *VarStmt) Accept(v StmtVisitor) (any, error) {
+	return v.VisitVarStmt(e)
 }
