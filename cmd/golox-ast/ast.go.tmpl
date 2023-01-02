@@ -5,14 +5,14 @@ import(
 	"github.com/doeg/golox/golox/token"
 )
 
-type Visitor interface {
+type {{ .BaseInterface }}Visitor interface {
 	{{- range .VisitorFunctions }}
 	Visit{{ . }}{{ $.BaseInterface }}(expr *{{ . }}) (any, error)
 	{{- end }}
 }
 
 type {{.BaseInterface}} interface {
-	Accept(Visitor) (any, error)
+	Accept({{ .BaseInterface }}Visitor) (any, error)
 }
 
 {{ range .Types }}
@@ -22,7 +22,7 @@ type {{ .StructName }} struct {
 	{{- end }}
 }
 
-func (e *{{ .StructName }}) Accept(v Visitor) (any, error) {
+func (e *{{ .StructName }}) Accept(v {{ $.BaseInterface }}Visitor) (any, error) {
 	return v.Visit{{ .StructName }}{{ $.BaseInterface }}(e)
 }
 {{ end }}
