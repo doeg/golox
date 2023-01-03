@@ -31,7 +31,7 @@ func New(tokens []*token.Token) *Parser {
 }
 
 func (p *Parser) Parse() (ast.Expr, error) {
-	expr, err := p.expression()
+	expr, err := p.parseExpression()
 	if err != nil {
 		// TODO check if instance of LoxParseError
 		// TODO the book returns nil here :thinking:
@@ -74,45 +74,6 @@ func (p *Parser) check(tokenType token.TokenType) (bool, error) {
 	return nextToken.Type == tokenType, nil
 }
 
-// comparison implements the following grammar rule:
-//
-//	comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term)* ;
-func (p *Parser) comparison() (ast.Expr, error) {
-	expr, err := p.term()
-	if err != nil {
-		return nil, err
-	}
-
-	for {
-		isMatch, err := p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL)
-		if err != nil {
-			return nil, err
-		}
-
-		if !isMatch {
-			break
-		}
-
-		operator, err := p.previous()
-		if err != nil {
-			return nil, err
-		}
-
-		right, err := p.term()
-		if err != nil {
-			return nil, err
-		}
-
-		expr = &ast.BinaryExpr{
-			Left:     expr,
-			Operator: operator,
-			Right:    right,
-		}
-	}
-
-	return expr, nil
-}
-
 // consume checks to see if the next token is of the expected type.
 // If so, it consumes the token. If some other token is there, then we've
 // hit an error.
@@ -132,91 +93,6 @@ func (p *Parser) consume(tokenType token.TokenType, message string) error {
 	}
 
 	return nil
-}
-
-// equality implements the following grammar rule:
-//
-//	equality -> comparison ( ( "!=" | "==" ) comparison )* ;
-func (p *Parser) equality() (ast.Expr, error) {
-	expr, err := p.comparison()
-	if err != nil {
-		return nil, err
-	}
-
-	for {
-		isMatch, err := p.match(token.BANG_EQUAL, token.EQUAL_EQUAL)
-		if err != nil {
-			return nil, err
-		}
-
-		if !isMatch {
-			break
-		}
-
-		operator, err := p.previous()
-		if err != nil {
-			return nil, err
-		}
-
-		right, err := p.comparison()
-		if err != nil {
-			return nil, err
-		}
-
-		expr = &ast.BinaryExpr{
-			Left:     expr,
-			Operator: operator,
-			Right:    right,
-		}
-	}
-
-	return expr, nil
-}
-
-// expression implements the following grammar rule:
-//
-//	expression -> equality ;
-func (p *Parser) expression() (ast.Expr, error) {
-	return p.equality()
-}
-
-// factor implements the following grammar rule:
-//
-//	factor -> unary ( ( "/" | "*" ) unary )* ;
-func (p *Parser) factor() (ast.Expr, error) {
-	expr, err := p.unary()
-	if err != nil {
-		return nil, err
-	}
-
-	for {
-		isMatch, err := p.match(token.SLASH, token.STAR)
-		if err != nil {
-			return nil, err
-		}
-
-		if !isMatch {
-			break
-		}
-
-		operator, err := p.previous()
-		if err != nil {
-			return nil, err
-		}
-
-		right, err := p.factor()
-		if err != nil {
-			return nil, err
-		}
-
-		expr = &ast.BinaryExpr{
-			Left:     expr,
-			Operator: operator,
-			Right:    right,
-		}
-	}
-
-	return expr, nil
 }
 
 // get returns a pointer to the Token at the given index.
@@ -255,20 +131,135 @@ func (p *Parser) match(tokenTypes ...token.TokenType) (bool, error) {
 	return false, nil
 }
 
-// peek is a one-token lookahead, returning the current token without consuming it.
-func (p *Parser) peek() (*token.Token, error) {
-	return p.get(p.current)
+// parseComparison implements the following grammar rule:
+//
+//	comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term)* ;
+func (p *Parser) parseComparison() (ast.Expr, error) {
+	expr, err := p.parseTerm()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		isMatch, err := p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL)
+		if err != nil {
+			return nil, err
+		}
+
+		if !isMatch {
+			break
+		}
+
+		operator, err := p.previous()
+		if err != nil {
+			return nil, err
+		}
+
+		right, err := p.parseTerm()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.BinaryExpr{
+			Left:     expr,
+			Operator: operator,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
 }
 
-func (p *Parser) previous() (*token.Token, error) {
-	return p.get(p.current - 1)
+// parseEquality implements the following grammar rule:
+//
+//	equality -> comparison ( ( "!=" | "==" ) comparison )* ;
+func (p *Parser) parseEquality() (ast.Expr, error) {
+	expr, err := p.parseComparison()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		isMatch, err := p.match(token.BANG_EQUAL, token.EQUAL_EQUAL)
+		if err != nil {
+			return nil, err
+		}
+
+		if !isMatch {
+			break
+		}
+
+		operator, err := p.previous()
+		if err != nil {
+			return nil, err
+		}
+
+		right, err := p.parseComparison()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.BinaryExpr{
+			Left:     expr,
+			Operator: operator,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
 }
 
-// primary implements the following grammar rule:
+// parseExpression implements the following grammar rule:
+//
+//	expression -> equality ;
+func (p *Parser) parseExpression() (ast.Expr, error) {
+	return p.parseEquality()
+}
+
+// parseFactor implements the following grammar rule:
+//
+//	factor -> unary ( ( "/" | "*" ) unary )* ;
+func (p *Parser) parseFactor() (ast.Expr, error) {
+	expr, err := p.parseUnary()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		isMatch, err := p.match(token.SLASH, token.STAR)
+		if err != nil {
+			return nil, err
+		}
+
+		if !isMatch {
+			break
+		}
+
+		operator, err := p.previous()
+		if err != nil {
+			return nil, err
+		}
+
+		right, err := p.parseFactor()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.BinaryExpr{
+			Left:     expr,
+			Operator: operator,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
+}
+
+// parsePrimary implements the following grammar rule:
 //
 //	primary -> 	NUMBER | STRING | "true" | "false" | "nil"
 //				| "(" expression ")" ;
-func (p *Parser) primary() (ast.Expr, error) {
+func (p *Parser) parsePrimary() (ast.Expr, error) {
 	isMatch, err := p.match(token.FALSE)
 	if err != nil {
 		return nil, err
@@ -306,7 +297,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	} else if isMatch {
-		expr, err := p.expression()
+		expr, err := p.parseExpression()
 		if err != nil {
 			return nil, err
 		}
@@ -323,6 +314,84 @@ func (p *Parser) primary() (ast.Expr, error) {
 
 	// TODO return a LoxError instead of a regular error for unrecognized type
 	return nil, errors.New(ErrExpectExpression)
+}
+
+// parseTerm implements the following grammar rule:
+//
+//	term -> factor ( ( "-" | "+" ) factor )* ;
+func (p *Parser) parseTerm() (ast.Expr, error) {
+	expr, err := p.parseFactor()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		isMatch, err := p.match(token.MINUS, token.PLUS)
+		if err != nil {
+			return nil, err
+		}
+
+		if !isMatch {
+			break
+		}
+
+		operator, err := p.previous()
+		if err != nil {
+			return nil, err
+		}
+
+		right, err := p.parseFactor()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.BinaryExpr{
+			Left:     expr,
+			Operator: operator,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
+}
+
+// parseUnary implements the following grammar rule:
+//
+//	unary -> ( "!" | "-" ) unary
+//		 	 | primary
+func (p *Parser) parseUnary() (ast.Expr, error) {
+	isMatch, err := p.match(token.BANG, token.MINUS)
+	if err != nil {
+		return nil, err
+	}
+
+	if isMatch {
+		operator, err := p.previous()
+		if err != nil {
+			return nil, err
+		}
+
+		right, err := p.parseUnary()
+		if err != nil {
+			return nil, err
+		}
+
+		return &ast.UnaryExpr{
+			Operator: operator,
+			Right:    right,
+		}, nil
+	}
+
+	return p.parsePrimary()
+}
+
+// peek is a one-token lookahead, returning the current token without consuming it.
+func (p *Parser) peek() (*token.Token, error) {
+	return p.get(p.current)
+}
+
+func (p *Parser) previous() (*token.Token, error) {
+	return p.get(p.current - 1)
 }
 
 // synchronize discards tokens until we're at the beginning of a new statement.
@@ -366,73 +435,4 @@ func (p *Parser) synchronize() error {
 			return err
 		}
 	}
-}
-
-// term implements the following grammar rule:
-//
-//	factor ( ( "-" | "+" ) factor )* ;
-func (p *Parser) term() (ast.Expr, error) {
-	expr, err := p.factor()
-	if err != nil {
-		return nil, err
-	}
-
-	for {
-		isMatch, err := p.match(token.MINUS, token.PLUS)
-		if err != nil {
-			return nil, err
-		}
-
-		if !isMatch {
-			break
-		}
-
-		operator, err := p.previous()
-		if err != nil {
-			return nil, err
-		}
-
-		right, err := p.factor()
-		if err != nil {
-			return nil, err
-		}
-
-		expr = &ast.BinaryExpr{
-			Left:     expr,
-			Operator: operator,
-			Right:    right,
-		}
-	}
-
-	return expr, nil
-}
-
-// unary implements the following grammar rule:
-//
-//	unary -> ( "!" | "-" ) unary
-//		 	 | primary
-func (p *Parser) unary() (ast.Expr, error) {
-	isMatch, err := p.match(token.BANG, token.MINUS)
-	if err != nil {
-		return nil, err
-	}
-
-	if isMatch {
-		operator, err := p.previous()
-		if err != nil {
-			return nil, err
-		}
-
-		right, err := p.unary()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ast.UnaryExpr{
-			Operator: operator,
-			Right:    right,
-		}, nil
-	}
-
-	return p.primary()
 }
