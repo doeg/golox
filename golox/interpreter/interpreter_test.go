@@ -342,7 +342,7 @@ func TestVisitBinaryExpression(t *testing.T) {
 			pExpr, err := p.Parse()
 			require.Nil(t, err)
 
-			expr := pExpr.(*ast.Binary)
+			expr := pExpr.(*ast.BinaryExpr)
 
 			i := New()
 			result, err := i.VisitBinaryExpr(expr)
@@ -404,7 +404,7 @@ func TestVisitUnaryExpression(t *testing.T) {
 			pExpr, err := p.Parse()
 			require.Nil(t, err)
 
-			expr := pExpr.(*ast.Unary)
+			expr := pExpr.(*ast.UnaryExpr)
 
 			i := New()
 			result, err := i.VisitUnaryExpr(expr)

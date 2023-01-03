@@ -14,14 +14,14 @@ func TestASTPrinter(t *testing.T) {
 		expected string
 	}{
 		{
-			input: &ast.Binary{
-				Left: &ast.Unary{
+			input: &ast.BinaryExpr{
+				Left: &ast.UnaryExpr{
 					Operator: &token.Token{
 						Lexeme: "-",
 						Line:   1,
 						Type:   token.MINUS,
 					},
-					Right: &ast.Literal{
+					Right: &ast.LiteralExpr{
 						Value: 123,
 					},
 				},
@@ -30,8 +30,8 @@ func TestASTPrinter(t *testing.T) {
 					Line:   1,
 					Type:   token.STAR,
 				},
-				Right: &ast.Grouping{
-					Expression: &ast.Literal{
+				Right: &ast.GroupingExpr{
+					Expression: &ast.LiteralExpr{
 						Value: 45.67,
 					},
 				},
