@@ -30,14 +30,30 @@ func New(tokens []*token.Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() (ast.Expr, error) {
-	expr, err := p.parseExpression()
-	if err != nil {
-		// TODO check if instance of LoxParseError
-		// TODO the book returns nil here :thinking:
-		return nil, err
+// Parse parses as many statements as we find until EOF.
+// This is equivalent to the following grammar rule:
+//
+//	program -> declaration* EOF ;
+func (p *Parser) Parse() ([]ast.Stmt, error) {
+	statements := make([]ast.Stmt, 0)
+
+	for {
+		atEnd, err := p.isAtEnd()
+		if err != nil {
+			return nil, err
+		} else if atEnd {
+			break
+		}
+
+		stmt, err := p.parseDeclaration()
+		if err != nil {
+			return nil, err
+		}
+
+		statements = append(statements, stmt)
 	}
-	return expr, nil
+
+	return statements, nil
 }
 
 // advance consumes the current token and returns it
@@ -77,22 +93,22 @@ func (p *Parser) check(tokenType token.TokenType) (bool, error) {
 // consume checks to see if the next token is of the expected type.
 // If so, it consumes the token. If some other token is there, then we've
 // hit an error.
-func (p *Parser) consume(tokenType token.TokenType, message string) error {
+func (p *Parser) consume(tokenType token.TokenType, message string) (*token.Token, error) {
 	isMatch, err := p.check(tokenType)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !isMatch {
-		return errors.New(message)
+		return nil, errors.New(message)
 	}
 
-	_, err = p.advance()
+	tok, err := p.advance()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return tok, nil
 }
 
 // get returns a pointer to the Token at the given index.
@@ -170,6 +186,13 @@ func (p *Parser) parseComparison() (ast.Expr, error) {
 	return expr, nil
 }
 
+// parseDeclaration implements the following grammar rule:
+//
+//	declaration -> statement;
+func (p *Parser) parseDeclaration() (ast.Stmt, error) {
+	return p.parseStatement()
+}
+
 // parseEquality implements the following grammar rule:
 //
 //	equality -> comparison ( ( "!=" | "==" ) comparison )* ;
@@ -209,11 +232,29 @@ func (p *Parser) parseEquality() (ast.Expr, error) {
 	return expr, nil
 }
 
-// parseExpression implements the following grammar rule:
+// ParseExpression implements the following grammar rule:
 //
 //	expression -> equality ;
-func (p *Parser) parseExpression() (ast.Expr, error) {
+func (p *Parser) ParseExpression() (ast.Expr, error) {
 	return p.parseEquality()
+}
+
+// parseExpressionStatement implements the following grammar rule:
+//
+//	exprStmt -> expression ";" ;
+func (p *Parser) parseExpressionStatement() (ast.Stmt, error) {
+	expr, err := p.ParseExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := p.consume(token.SEMICOLON, "expected ';' after expression"); err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionStmt{
+		Expression: expr,
+	}, nil
 }
 
 // parseFactor implements the following grammar rule:
@@ -297,13 +338,12 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	} else if isMatch {
-		expr, err := p.parseExpression()
+		expr, err := p.ParseExpression()
 		if err != nil {
 			return nil, err
 		}
 
-		err = p.consume(token.RIGHT_PAREN, ErrExpectClosingParen)
-		if err != nil {
+		if _, err = p.consume(token.RIGHT_PAREN, ErrExpectClosingParen); err != nil {
 			return nil, err
 		}
 
@@ -314,6 +354,38 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 
 	// TODO return a LoxError instead of a regular error for unrecognized type
 	return nil, errors.New(ErrExpectExpression)
+}
+
+// parsePrintStatement implements the following grammar rule:
+//
+//	printStmt -> "print" expression ";" ;
+func (p *Parser) parsePrintStatement() (ast.Stmt, error) {
+	expr, err := p.ParseExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := p.consume(token.SEMICOLON, "expect ';' after expression"); err != nil {
+		return nil, err
+	}
+
+	return &ast.PrintStmt{
+		Expression: expr,
+	}, nil
+}
+
+// parseStatement implements the following grammar rule:
+//
+//	statement -> exprStmt | printStmt ;
+func (p *Parser) parseStatement() (ast.Stmt, error) {
+	isPrint, err := p.match(token.PRINT)
+	if err != nil {
+		return nil, err
+	} else if isPrint {
+		return p.parsePrintStatement()
+	}
+
+	return p.parseExpressionStatement()
 }
 
 // parseTerm implements the following grammar rule:

@@ -51,6 +51,10 @@ func main() {
 			"Literal	:	Object value",
 			"Unary		:	Token operator, Expr right",
 		}),
+		defineAST("Stmt", []string{
+			"Expression :	Expr expression",
+			"Print		: 	Expr expression",
+		}),
 	}
 
 	t, err := template.New("golox-ast").Funcs(template.FuncMap{

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParse(t *testing.T) {
+func TestParseExpression(t *testing.T) {
 	tests := []struct {
 		testName      string
 		input         string
@@ -185,7 +185,7 @@ func TestParse(t *testing.T) {
 			require.Empty(t, errors)
 
 			p := New(tokens)
-			expr, err := p.Parse()
+			expr, err := p.ParseExpression()
 
 			if tt.expectedError != nil {
 				assert.Nil(t, expr)
