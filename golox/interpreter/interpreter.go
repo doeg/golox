@@ -2,19 +2,31 @@ package interpreter
 
 import (
 	"errors"
+	"fmt"
+	"io"
 
 	"github.com/doeg/golox/golox/ast"
 	"github.com/doeg/golox/golox/token"
 )
 
-type Interpreter struct{}
-
-func New() *Interpreter {
-	return &Interpreter{}
+type Interpreter struct {
+	writer io.Writer
 }
 
-func (i *Interpreter) Interpret(expr ast.Expr) (any, error) {
-	return i.evaluate(expr)
+func New(writer io.Writer) *Interpreter {
+	return &Interpreter{
+		writer: writer,
+	}
+}
+
+func (i *Interpreter) Interpret(expr ast.Expr) error {
+	output, err := i.evaluate(expr)
+	if err != nil {
+		return err
+	}
+
+	_, err = i.writer.Write([]byte(fmt.Sprintf("%+v\n", output)))
+	return err
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
