@@ -356,10 +356,35 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 	return nil, errors.New(ErrExpectExpression)
 }
 
+// parsePrintStatement implements the following grammar rule:
+//
+//	printStmt -> "print" expression ";" ;
+func (p *Parser) parsePrintStatement() (ast.Stmt, error) {
+	expr, err := p.ParseExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := p.consume(token.SEMICOLON, "expect ';' after expression"); err != nil {
+		return nil, err
+	}
+
+	return &ast.PrintStmt{
+		Expression: expr,
+	}, nil
+}
+
 // parseStatement implements the following grammar rule:
 //
-//	statement -> exprStmt ;
+//	statement -> exprStmt | printStmt ;
 func (p *Parser) parseStatement() (ast.Stmt, error) {
+	isPrint, err := p.match(token.PRINT)
+	if err != nil {
+		return nil, err
+	} else if isPrint {
+		return p.parsePrintStatement()
+	}
+
 	return p.parseExpressionStatement()
 }
 

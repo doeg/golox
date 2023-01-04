@@ -53,6 +53,7 @@ func main() {
 		}),
 		defineAST("Stmt", []string{
 			"Expression :	Expr expression",
+			"Print		: 	Expr expression",
 		}),
 	}
 

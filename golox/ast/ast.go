@@ -53,6 +53,7 @@ func (e *UnaryExpr) Accept(v ExprVisitor) (any, error) {
 
 type StmtVisitor interface {
 	VisitExpressionStmt(expr *ExpressionStmt) (any, error)
+	VisitPrintStmt(expr *PrintStmt) (any, error)
 }
 
 type Stmt interface {
@@ -65,4 +66,12 @@ type ExpressionStmt struct {
 
 func (e *ExpressionStmt) Accept(v StmtVisitor) (any, error) {
 	return v.VisitExpressionStmt(e)
+}
+
+type PrintStmt struct {
+	Expression Expr
+}
+
+func (e *PrintStmt) Accept(v StmtVisitor) (any, error) {
+	return v.VisitPrintStmt(e)
 }

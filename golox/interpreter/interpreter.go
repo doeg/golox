@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/doeg/golox/golox/ast"
@@ -118,6 +119,19 @@ func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) (any, error) {
 
 func (i *Interpreter) VisitLiteralExpr(expr *ast.LiteralExpr) (any, error) {
 	return expr.Value, nil
+}
+
+func (i *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) (any, error) {
+	expr, err := i.evaluate(stmt.Expression)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := i.writer.Write([]byte(fmt.Sprintf("%+v\n", expr))); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
