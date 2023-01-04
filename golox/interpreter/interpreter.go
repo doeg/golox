@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/doeg/golox/golox/ast"
@@ -19,14 +18,14 @@ func New(writer io.Writer) *Interpreter {
 	}
 }
 
-func (i *Interpreter) Interpret(expr ast.Expr) error {
-	output, err := i.evaluate(expr)
-	if err != nil {
-		return err
+func (i *Interpreter) Interpret(statements []ast.Stmt) error {
+	for _, stmt := range statements {
+		if _, err := i.execute(stmt); err != nil {
+			return err
+		}
 	}
 
-	_, err = i.writer.Write([]byte(fmt.Sprintf("%+v\n", output)))
-	return err
+	return nil
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
@@ -109,6 +108,10 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
 	return nil, errors.New("invalid binary operator")
 }
 
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (any, error) {
+	return i.evaluate(stmt.Expression)
+}
+
 func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) (any, error) {
 	return i.evaluate(expr.Expression)
 }
@@ -162,6 +165,10 @@ func (i *Interpreter) checkStringOperands(left, right any) (string, string, erro
 	}
 
 	return li, ri, nil
+}
+
+func (i *Interpreter) execute(stmt ast.Stmt) (any, error) {
+	return stmt.Accept(i)
 }
 
 func (i *Interpreter) evaluate(expr ast.Expr) (any, error) {
