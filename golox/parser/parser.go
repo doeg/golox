@@ -30,14 +30,36 @@ func New(tokens []*token.Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() (ast.Expr, error) {
-	expr, err := p.parseExpression()
-	if err != nil {
-		// TODO check if instance of LoxParseError
-		// TODO the book returns nil here :thinking:
-		return nil, err
+// Parse parses as many statements as we find until we reach EOF.
+// This is equivalent to the grammar rule:
+//
+//	program -> declaration* EOF ;
+func (p *Parser) Parse() ([]ast.Stmt, error) {
+	statements := make([]ast.Stmt, 0)
+
+	// TODO the book returns nil here :thinking:
+	for {
+		atEnd, err := p.isAtEnd()
+		if err != nil {
+			// TODO return Lox parse error
+			return nil, err
+		} else if atEnd {
+			break
+		}
+
+		// Again, this is equivalent to the grammar rule:
+		// 	program -> declaration* EOF ;
+		//
+		// In other words, a Lox program is a series of declarations.
+		stmt, err := p.parseDeclaration()
+		if err != nil {
+			return nil, err
+		}
+
+		statements = append(statements, stmt)
 	}
-	return expr, nil
+
+	return statements, nil
 }
 
 // advance consumes the current token and returns it
@@ -170,6 +192,19 @@ func (p *Parser) parseComparison() (ast.Expr, error) {
 	return expr, nil
 }
 
+// parseDeclaration implements the following grammar rule:
+//
+//	declaration -> varDecl | statement ;
+func (p *Parser) parseDeclaration() (ast.Stmt, error) {
+	// TODO
+	//
+	// if the next token is a VAR, then parse and return a VarStmt by way of calling
+	// p.parseVarDeclaration
+	//
+	// otherwise, return p.parseStatement
+	return nil, nil
+}
+
 // parseEquality implements the following grammar rule:
 //
 //	equality -> comparison ( ( "!=" | "==" ) comparison )* ;
@@ -216,6 +251,24 @@ func (p *Parser) parseExpression() (ast.Expr, error) {
 	return p.parseEquality()
 }
 
+// parseExpressionStmt implements the following grammar rule:
+//
+//	exprStmt -> expression ";" ;
+func (p *Parser) parseExpressionStmt() (ast.Stmt, error) {
+	expr, err := p.parseExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := p.consume(token.SEMICOLON, "expected ';' after value"); err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionStmt{
+		Expression: expr,
+	}, nil
+}
+
 // parseFactor implements the following grammar rule:
 //
 //	factor -> unary ( ( "/" | "*" ) unary )* ;
@@ -258,7 +311,8 @@ func (p *Parser) parseFactor() (ast.Expr, error) {
 // parsePrimary implements the following grammar rule:
 //
 //	primary -> 	NUMBER | STRING | "true" | "false" | "nil"
-//				| "(" expression ")" ;
+//				| "(" expression ")"
+//				| IDENTIFIER ;
 func (p *Parser) parsePrimary() (ast.Expr, error) {
 	isMatch, err := p.match(token.FALSE)
 	if err != nil {
@@ -313,6 +367,22 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 
 	// TODO return a LoxError instead of a regular error for unrecognized type
 	return nil, errors.New(ErrExpectExpression)
+}
+
+// parsePrint implements the following grammar rule:
+//
+//	printStmt -> "print" expression ";" ;
+func (p *Parser) parsePrint() (ast.Stmt, error) {
+	// TODO
+	return nil, nil
+}
+
+// parseStatement implements the following grammar rule:
+//
+//	statement -> exprStmt | printStmt ;
+func (p *Parser) parseStatement() (ast.Stmt, error) {
+	// TODO
+	return nil, nil
 }
 
 // parseTerm implements the following grammar rule:
@@ -382,6 +452,14 @@ func (p *Parser) parseUnary() (ast.Expr, error) {
 	}
 
 	return p.parsePrimary()
+}
+
+// This implements the following grammar rule:
+//
+//	varDecl -> "var" IDENTIFIER ( "=" expression )? ";" ;
+func (p *Parser) parseVarDeclaration() (ast.Stmt, error) {
+	// TODO
+	return nil, nil
 }
 
 // peek is a one-token lookahead, returning the current token without consuming it.

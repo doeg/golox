@@ -339,10 +339,10 @@ func TestVisitBinaryExpression(t *testing.T) {
 			require.Empty(t, errs)
 
 			p := parser.New(tokens)
-			pExpr, err := p.Parse()
+			stmts, err := p.Parse()
 			require.Nil(t, err)
 
-			expr := pExpr.(*ast.BinaryExpr)
+			expr := stmts[0].(*ast.ExpressionStmt).Expression.(*ast.BinaryExpr)
 
 			i := New()
 			result, err := i.VisitBinaryExpr(expr)
@@ -401,10 +401,10 @@ func TestVisitUnaryExpression(t *testing.T) {
 			require.Empty(t, errs)
 
 			p := parser.New(tokens)
-			pExpr, err := p.Parse()
+			stmts, err := p.Parse()
 			require.Nil(t, err)
 
-			expr := pExpr.(*ast.UnaryExpr)
+			expr := stmts[0].(*ast.ExpressionStmt).Expression.(*ast.UnaryExpr)
 
 			i := New()
 			result, err := i.VisitUnaryExpr(expr)
