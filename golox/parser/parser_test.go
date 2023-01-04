@@ -185,7 +185,7 @@ func TestParse(t *testing.T) {
 			require.Empty(t, errors)
 
 			p := New(tokens)
-			expr, err := p.Parse()
+			expr, err := p.parseExpression()
 
 			if tt.expectedError != nil {
 				assert.Nil(t, expr)
