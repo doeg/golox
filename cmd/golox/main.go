@@ -36,13 +36,10 @@ func repl() {
 			continue
 		}
 
-		i := interpreter.New()
-		result, err := i.Interpret(expr)
-		if err != nil {
+		i := interpreter.New(os.Stdout)
+		if err := i.Interpret(expr); err != nil {
 			fmt.Println(err)
 			continue
 		}
-
-		fmt.Printf("%+v\n", result)
 	}
 }
