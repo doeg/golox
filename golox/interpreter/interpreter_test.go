@@ -341,14 +341,14 @@ func TestVisitBinaryExpression(t *testing.T) {
 			require.Empty(t, errs)
 
 			p := parser.New(tokens)
-			stmts, err := p.Parse()
+			expr, err := p.ParseExpression()
 			require.Nil(t, err)
 
-			expr := stmts[0].(*ast.ExpressionStmt).Expression.(*ast.BinaryExpr)
+			// expr := stmts[0].(*ast.ExpressionStmt).Expression.(*ast.BinaryExpr)
 
 			var output bytes.Buffer
 			i := New(&output)
-			result, err := i.VisitBinaryExpr(expr)
+			result, err := i.VisitBinaryExpr(expr.(*ast.BinaryExpr))
 			if tt.expectedError != nil {
 				require.Equal(t, tt.expectedError, err)
 			} else {
@@ -404,14 +404,12 @@ func TestVisitUnaryExpression(t *testing.T) {
 			require.Empty(t, errs)
 
 			p := parser.New(tokens)
-			stmts, err := p.Parse()
+			expr, err := p.ParseExpression()
 			require.Nil(t, err)
-
-			expr := stmts[0].(*ast.ExpressionStmt).Expression.(*ast.UnaryExpr)
 
 			var output bytes.Buffer
 			i := New(&output)
-			result, err := i.VisitUnaryExpr(expr)
+			result, err := i.VisitUnaryExpr(expr.(*ast.UnaryExpr))
 			if tt.expectedError != nil {
 				require.Equal(t, tt.expectedError, err)
 			} else {
