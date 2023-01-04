@@ -14,6 +14,44 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInterpret(t *testing.T) {
+	tests := []struct {
+		testName string
+		input    string
+		expected string
+	}{
+		{
+			input:    "print \"hello\";",
+			expected: "hello\n",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		testName := tt.testName
+		if tt.testName == "" {
+			testName = tt.input
+		}
+
+		t.Run(testName, func(t *testing.T) {
+			s := scanner.New([]byte(tt.input))
+			tokens, errs := s.ScanTokens()
+			require.Empty(t, errs)
+
+			p := parser.New(tokens)
+			stmts, err := p.Parse()
+			require.Nil(t, err)
+
+			var output bytes.Buffer
+			i := New(&output)
+			i.Interpret(stmts)
+
+			assert.Equal(t, tt.expected, output.String())
+		})
+	}
+}
+
 func TestIsTruthy(t *testing.T) {
 	tests := []struct {
 		input    any

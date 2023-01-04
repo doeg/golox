@@ -162,7 +162,10 @@ func (i *Interpreter) VisitPrintStmt(expr *ast.PrintStmt) (any, error) {
 
 	// TODO figure out some way to direct output to places other than
 	// stdout for testing
-	fmt.Printf("%+v\n", val)
+	_, err = i.writer.Write([]byte(fmt.Sprintf("%+v\n", val)))
+	if err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
