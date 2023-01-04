@@ -77,22 +77,22 @@ func (p *Parser) check(tokenType token.TokenType) (bool, error) {
 // consume checks to see if the next token is of the expected type.
 // If so, it consumes the token. If some other token is there, then we've
 // hit an error.
-func (p *Parser) consume(tokenType token.TokenType, message string) error {
+func (p *Parser) consume(tokenType token.TokenType, message string) (*token.Token, error) {
 	isMatch, err := p.check(tokenType)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !isMatch {
-		return errors.New(message)
+		return nil, errors.New(message)
 	}
 
-	_, err = p.advance()
+	tok, err := p.advance()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return tok, nil
 }
 
 // get returns a pointer to the Token at the given index.
@@ -302,8 +302,7 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 			return nil, err
 		}
 
-		err = p.consume(token.RIGHT_PAREN, ErrExpectClosingParen)
-		if err != nil {
+		if _, err = p.consume(token.RIGHT_PAREN, ErrExpectClosingParen); err != nil {
 			return nil, err
 		}
 
