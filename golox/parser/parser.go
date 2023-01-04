@@ -31,7 +31,7 @@ func New(tokens []*token.Token) *Parser {
 }
 
 func (p *Parser) Parse() (ast.Expr, error) {
-	expr, err := p.parseExpression()
+	expr, err := p.ParseExpression()
 	if err != nil {
 		// TODO check if instance of LoxParseError
 		// TODO the book returns nil here :thinking:
@@ -209,10 +209,10 @@ func (p *Parser) parseEquality() (ast.Expr, error) {
 	return expr, nil
 }
 
-// parseExpression implements the following grammar rule:
+// ParseExpression implements the following grammar rule:
 //
 //	expression -> equality ;
-func (p *Parser) parseExpression() (ast.Expr, error) {
+func (p *Parser) ParseExpression() (ast.Expr, error) {
 	return p.parseEquality()
 }
 
@@ -297,7 +297,7 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	} else if isMatch {
-		expr, err := p.parseExpression()
+		expr, err := p.ParseExpression()
 		if err != nil {
 			return nil, err
 		}
