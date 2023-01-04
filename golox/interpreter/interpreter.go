@@ -3,24 +3,29 @@ package interpreter
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/doeg/golox/golox/ast"
 	"github.com/doeg/golox/golox/token"
 )
 
-type Interpreter struct{}
-
-func New() *Interpreter {
-	return &Interpreter{}
+type Interpreter struct {
+	writer io.Writer
 }
 
-func (i *Interpreter) Interpret(stmts []ast.Stmt) (any, error) {
+func New(writer io.Writer) *Interpreter {
+	return &Interpreter{
+		writer: writer,
+	}
+}
+
+func (i *Interpreter) Interpret(stmts []ast.Stmt) error {
 	for _, stmt := range stmts {
 		if _, err := i.execute(stmt); err != nil {
-			return nil, err
+			return err
 		}
 	}
-	return nil, nil
+	return nil
 }
 
 //

@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -57,7 +58,8 @@ func TestIsTruthy(t *testing.T) {
 		t.Run(fmt.Sprintf("%+v", tt.input), func(t *testing.T) {
 			t.Parallel()
 
-			i := New()
+			var output bytes.Buffer
+			i := New(&output)
 			result := i.isTruthy(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -344,7 +346,8 @@ func TestVisitBinaryExpression(t *testing.T) {
 
 			expr := stmts[0].(*ast.ExpressionStmt).Expression.(*ast.BinaryExpr)
 
-			i := New()
+			var output bytes.Buffer
+			i := New(&output)
 			result, err := i.VisitBinaryExpr(expr)
 			if tt.expectedError != nil {
 				require.Equal(t, tt.expectedError, err)
@@ -406,7 +409,8 @@ func TestVisitUnaryExpression(t *testing.T) {
 
 			expr := stmts[0].(*ast.ExpressionStmt).Expression.(*ast.UnaryExpr)
 
-			i := New()
+			var output bytes.Buffer
+			i := New(&output)
 			result, err := i.VisitUnaryExpr(expr)
 			if tt.expectedError != nil {
 				require.Equal(t, tt.expectedError, err)

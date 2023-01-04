@@ -36,8 +36,8 @@ func repl() {
 			continue
 		}
 
-		i := interpreter.New()
-		if _, err := i.Interpret(statements); err != nil {
+		i := interpreter.New(os.Stdout)
+		if err := i.Interpret(statements); err != nil {
 			fmt.Println(err)
 			continue
 		}
