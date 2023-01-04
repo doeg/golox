@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/doeg/golox/golox/ast"
 	"github.com/doeg/golox/golox/token"
@@ -13,9 +14,18 @@ func New() *Interpreter {
 	return &Interpreter{}
 }
 
-func (i *Interpreter) Interpret(expr ast.Expr) (any, error) {
-	return i.evaluate(expr)
+func (i *Interpreter) Interpret(stmts []ast.Stmt) (any, error) {
+	for _, stmt := range stmts {
+		if _, err := i.execute(stmt); err != nil {
+			return nil, err
+		}
+	}
+	return nil, nil
 }
+
+//
+// Expr visitor functions
+//
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (any, error) {
 	left, err := i.evaluate(expr.Left)
@@ -128,6 +138,39 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
 	return nil, nil
 }
 
+//
+// Stmt visitor functions
+//
+
+func (i *Interpreter) VisitExpressionStmt(expr *ast.ExpressionStmt) (any, error) {
+	if _, err := i.evaluate(expr.Expression); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (i *Interpreter) VisitPrintStmt(expr *ast.PrintStmt) (any, error) {
+	val, err := i.evaluate(expr.Expression)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO figure out some way to direct output to places other than
+	// stdout for testing
+	fmt.Printf("%+v\n", val)
+
+	return nil, nil
+}
+
+func (i *Interpreter) VisitVarStmt(expr *ast.VarStmt) (any, error) {
+	// TODO
+	return nil, nil
+}
+
+//
+// Helper functions
+//
+
 func (i *Interpreter) checkNumberOperands(left, right any) (float64, float64, error) {
 	li, lok := left.(float64)
 	ri, rok := right.(float64)
@@ -150,6 +193,10 @@ func (i *Interpreter) checkStringOperands(left, right any) (string, string, erro
 	}
 
 	return li, ri, nil
+}
+
+func (i *Interpreter) execute(stmt ast.Stmt) (any, error) {
+	return stmt.Accept(i)
 }
 
 func (i *Interpreter) evaluate(expr ast.Expr) (any, error) {

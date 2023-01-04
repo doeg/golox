@@ -196,13 +196,14 @@ func (p *Parser) parseComparison() (ast.Expr, error) {
 //
 //	declaration -> varDecl | statement ;
 func (p *Parser) parseDeclaration() (ast.Stmt, error) {
-	// TODO
-	//
-	// if the next token is a VAR, then parse and return a VarStmt by way of calling
-	// p.parseVarDeclaration
-	//
-	// otherwise, return p.parseStatement
-	return nil, nil
+	isVar, err := p.match(token.VAR)
+	if err != nil {
+		return nil, err
+	} else if isVar {
+		return p.parseVarDeclaration()
+	}
+
+	return p.parseStatement()
 }
 
 // parseEquality implements the following grammar rule:
@@ -373,16 +374,32 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 //
 //	printStmt -> "print" expression ";" ;
 func (p *Parser) parsePrint() (ast.Stmt, error) {
-	// TODO
-	return nil, nil
+	expr, err := p.parseExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := p.consume(token.SEMICOLON, "expected ';' after expression"); err != nil {
+		return nil, err
+	}
+
+	return &ast.PrintStmt{
+		Expression: expr,
+	}, nil
 }
 
 // parseStatement implements the following grammar rule:
 //
 //	statement -> exprStmt | printStmt ;
 func (p *Parser) parseStatement() (ast.Stmt, error) {
-	// TODO
-	return nil, nil
+	isPrint, err := p.match(token.PRINT)
+	if err != nil {
+		return nil, err
+	} else if isPrint {
+		return p.parsePrint()
+	}
+
+	return p.parseExpressionStmt()
 }
 
 // parseTerm implements the following grammar rule:
