@@ -188,8 +188,16 @@ func (p *Parser) parseComparison() (ast.Expr, error) {
 
 // parseDeclaration implements the following grammar rule:
 //
-//	declaration -> statement;
+//	declaration -> varDecl | statement;
 func (p *Parser) parseDeclaration() (ast.Stmt, error) {
+	// TODO synchronize in here
+	isVar, err := p.match(token.VAR)
+	if err != nil {
+		return nil, err
+	} else if isVar {
+		return p.parseVarDeclaration()
+	}
+
 	return p.parseStatement()
 }
 
@@ -299,7 +307,8 @@ func (p *Parser) parseFactor() (ast.Expr, error) {
 // parsePrimary implements the following grammar rule:
 //
 //	primary -> 	NUMBER | STRING | "true" | "false" | "nil"
-//				| "(" expression ")" ;
+//				| "(" expression ")"
+//				| IDENTIFIER ;
 func (p *Parser) parsePrimary() (ast.Expr, error) {
 	isMatch, err := p.match(token.FALSE)
 	if err != nil {
@@ -332,6 +341,21 @@ func (p *Parser) parsePrimary() (ast.Expr, error) {
 		}
 
 		return &ast.LiteralExpr{Value: prev.Literal}, err
+	}
+
+	isMatch, err = p.match(token.IDENTIFIER)
+	if err != nil {
+		return nil, err
+	} else if isMatch {
+		// FIXME understand this more deeply
+		name, err := p.previous()
+		if err != nil {
+			return nil, err
+		}
+
+		return &ast.VariableExpr{
+			Name: name,
+		}, nil
 	}
 
 	isMatch, err = p.match(token.LEFT_PAREN)
@@ -455,6 +479,38 @@ func (p *Parser) parseUnary() (ast.Expr, error) {
 	}
 
 	return p.parsePrimary()
+}
+
+// parseVarDeclaration implements the following grammar rule:
+//
+//	varDecl -> "var" IDENTIFIER ( "=" expression )? ";" ;
+func (p *Parser) parseVarDeclaration() (ast.Stmt, error) {
+	// The parser has already parsed the "var" token in `parseDeclaration`,
+	// so the next token up is the identifier (or name) of the variable.
+	name, err := p.consume(token.IDENTIFIER, "expect variable name")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer ast.Expr
+	hasInitializer, err := p.match(token.EQUAL)
+	if err != nil {
+		return nil, err
+	} else if hasInitializer {
+		initializer, err = p.ParseExpression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if _, err := p.consume(token.SEMICOLON, "expect ';' after var declaration"); err != nil {
+		return nil, err
+	}
+
+	return &ast.VarStmt{
+		Name:        name,
+		Initializer: initializer,
+	}, nil
 }
 
 // peek is a one-token lookahead, returning the current token without consuming it.

@@ -6,15 +6,18 @@ import (
 	"io"
 
 	"github.com/doeg/golox/golox/ast"
+	"github.com/doeg/golox/golox/environment"
 	"github.com/doeg/golox/golox/token"
 )
 
 type Interpreter struct {
+	env    *environment.Environment
 	writer io.Writer
 }
 
 func New(writer io.Writer) *Interpreter {
 	return &Interpreter{
+		env:    environment.New(),
 		writer: writer,
 	}
 }
@@ -154,6 +157,36 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (any, error) {
 	}
 
 	// Unreachable. TODO: return an error...?
+	return nil, nil
+}
+
+func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) (any, error) {
+	return i.env.Get(expr.Name)
+}
+
+func (i *Interpreter) VisitVarStmt(stmt *ast.VarStmt) (any, error) {
+	// This is for var declaration statements, for example:
+	//	var a = 1;
+	//	var b;
+	var val any
+
+	// Note that we don't require variable declarations to include an initializer
+	// (the "var b;" case, as opposed to the "var a = 1;" case, "1" being the initializer).
+	// If a var declaration doesn't have an initializer, then Lox just sets the value
+	// to nil.
+	//
+	// TODO double check this behavior with a test -- do we have to explicitly assign it
+	// as nil in the env map? I can't remember.
+	if stmt.Initializer != nil {
+		v, err := i.evaluate(stmt.Initializer)
+		if err != nil {
+			return nil, err
+		}
+		val = v
+	}
+
+	i.env.Define(stmt.Name.Lexeme, val)
+
 	return nil, nil
 }
 

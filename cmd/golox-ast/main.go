@@ -50,10 +50,12 @@ func main() {
 			"Grouping	:	Expr expression",
 			"Literal	:	Object value",
 			"Unary		:	Token operator, Expr right",
+			"Variable	: 	Token name",
 		}),
 		defineAST("Stmt", []string{
 			"Expression :	Expr expression",
 			"Print		: 	Expr expression",
+			"Var		: 	Token name, Expr initializer",
 		}),
 	}
 
